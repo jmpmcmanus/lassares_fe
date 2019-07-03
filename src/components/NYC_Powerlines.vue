@@ -13,7 +13,7 @@
             <header class="card-header">
               <div v-if="featureID !== undefined">
                 <p class="card-header-title">
-                  Parcel: {{ featureID }}
+                  ID: {{ featureID }}
                 </p>
               </div>
               <a class="card-header-icon" title="Close"
@@ -24,25 +24,8 @@
             <div class="card-content">
               <div class="content">
                 <div v-if="featureID !== undefined">
-                  <div v-if="parcelValue !== undefined">
-                    Description: {{ Props.parusedesc }}</br>
-                    Parcel Value: {{ parcelValue }}</br>
-                    Land Value: {{ Props.landval }}</br>
-                    Improvement Value: {{ Props.improvval }}</br>
-                    Color Value: {{ Props.color }}</br>
-                    <div v-if="Props.struct === 'Y'">
-                      Structures: {{ Props.structno }},</br>
-                      Year Built: {{ Props.structyear }}
-                    </div>
-                  </div>
-                  <div v-else-if="bldgValue !== undefined">
-                    Building Value: {{ bldgValue }}</br>
-                    Replacement Value: {{ Props.bldgrepval }}</br>
-                    Heated Square Feet: {{ Props.htd_sq_ft }}</br>
-                    Flood Levels: {{Props.fldlevels}}
-                  </div>
-                  <div v-else>
-                    Shit
+                  <div if="powerline !== undefined">
+                    Powerline: {{ powerline }}</br>
                   </div>
                 </div>
                 <div v-else-if="featureID === undefined">
@@ -154,159 +137,7 @@
             <tr>
               <b-collapse :open="false">
                 <div slot="trigger">
-                   <th>Florence Flood Levels</th>
-                </div>
-                <div class="content">
-                  <table class="table is-fullwidth">
-                    <tr>
-                      <td style="background-color: hsla(196, 73%, 52%, 1)">&nbsp;</td>
-                      <td>Flood Level 1 (Depth Less than 5 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(245, 84%, 52%, 1)">&nbsp;</td>
-                      <td>Flood Level 2 (Depth 5 to 10 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(248, 83%, 36%, 1)">&nbsp;</td>
-                      <td>Flood Level 3 (Depth 10 to 15 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(288, 85%, 49%, 1)">&nbsp;</td>
-                      <td>Flood Level 4 (Depth 15 to 20 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(317, 86%, 50%, 1)">&nbsp;</td>
-                      <td>Flood Level 5 (Depth Greater than 20 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td><b>Source</b></td>
-                      <td>This data was derived from 
-                        <a href="https://usace.maps.arcgis.com/apps/webappviewer/index.html?id=d9b3aab757f64e1897f8a75efd4d3975" target="_blank">
-                        US Army Corp of Engineers, Modeled Flood Depth Data</a></td>
-                    </tr>
-                  </table>
-                </div>
-              </b-collapse>
-            </tr>
-            <tr>
-              <b-collapse :open="false">
-                <div slot="trigger">
-                   <th>FEMA Flood Hazards Zones</th>
-                </div>
-                <div class="content">
-                  <table class="table is-fullwidth">
-                    <tr>
-                      <td style="background-color: hsla(192, 83%, 54%, 1)">&nbsp;</td>
-                      <td>Flood Zone A - 100 Year Flood, Base Flood Elevation Not Determined</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(208, 80%, 52%, 1)">&nbsp;</td>
-                      <td>Flood Zone AE - 100 Year Flood, Base Flood Elevation Determined</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(243, 88%, 30%, 1)">&nbsp;</td>
-                      <td>Flood Zone AE - Floodway - 100 Year Flood, Base Flood Elevation Determined</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(178, 87%, 55%, 1)">&nbsp;</td>
-                      <td>0.2 PCT ANNUAL CHANCE FLOOD HAZARD - 500 Year Flood</td>
-                    </tr>
-                    <tr>
-                      <td><b>Source</b></td>
-                      <td>This data was derived from <a href="https://flood.nc.gov/ncflood/" target="_blank">
-                      FEMA flood plain data</a>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              </b-collapse>
-            </tr>
-            <tr>
-              <b-collapse :open="false">
-                <div slot="trigger">
-                   <th>Flooded Areas in Property Parcels</th>
-                </div>
-                <div class="content">
-                  <table class="table is-fullwidth">
-                    <tr>
-                      <td style="background-color: hsla(2, 100%, 85%, 1)">&nbsp;</td>
-                      <td>Flood level 1 (Depth Less than 5 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(353, 100%, 75%, 1)">&nbsp;</td>
-                      <td>Flood Level 2 (Depth 5 to 10 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(0, 100%, 65%, 1)">&nbsp;</td>
-                      <td>Flood Level 3 (Depth 10 to 15 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(0, 100%, 57%, 1)">&nbsp;</td>
-                      <td>Flood Level 4 (Depth 15 to 20 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(1, 100%, 53%, 1)">&nbsp;</td>
-                      <td>Flood Level 5 (Depth Greater than 20 Feet)</td>
-                    </tr>
-                    <tr>
-                      <td><b>Source</b></td>
-                      <td>This data was derived from 
-                        <a href="https://usace.maps.arcgis.com/apps/webappviewer/index.html?id=d9b3aab757f64e1897f8a75efd4d3975" target="_blank">
-                        US Army Corp of Engineers, Modeled Flood Depth Data</a> and 
-                        <a href="http://www.nconemap.com/ParcelsforNorthCarolina.aspx" target="_blank">Cumberland County property parcel data</a>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              </b-collapse>
-            </tr>
-            <tr>
-              <b-collapse :open="false">
-                <div slot="trigger">
-                  <th>Fooded Property Parcels</th>
-                </div>
-                <div class="content">
-                  <table class="table is-fullwidth">
-                    <tr>
-                      <td style="background-color: hsla(134, 89%, 51%, 1)">&nbsp;</td>
-                      <td>Property Values $50,000 and Below</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(78, 89%, 51%, 1)">&nbsp;</td>
-                      <td>Property Values Between $50,001 and $100,000</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(116, 89%, 51%, 1)">&nbsp;</td>
-                      <td>Property Values Between $100,001 and $150,000</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(117, 76%, 35%, 1)">&nbsp;</td>
-                      <td>Property Values Between $150,001 and $200,000</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(117, 77%, 23%, 1)">&nbsp;</td>
-                      <td>Property Values Between $200,001 and $250,000</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(108, 92%, 9%, 1)">&nbsp;</td>
-                      <td>Property Values Above $250,000</td>
-                    </tr>
-                    <tr>
-                      <td><b>Source</b></td>
-                      <td>This data was derived from 
-                        <a href="https://usace.maps.arcgis.com/apps/webappviewer/index.html?id=d9b3aab757f64e1897f8a75efd4d3975" target="_blank">
-                        US Army Corp of Engineers, Modeled Flood Depth Data</a> and 
-                        <a href="http://www.nconemap.com/ParcelsforNorthCarolina.aspx" target="_blank">Cumberland County property parcel data</a>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              </b-collapse>
-            </tr>
-            <tr>
-              <b-collapse :open="false">
-                <div slot="trigger">
-                   <th>Flooded Buildings</th>
+                   <th>NYC Powerlines</th>
                 </div>
                 <div class="content">
                   <table class="table is-fullwidth">
@@ -360,18 +191,8 @@
   import FullScreen from 'ol/control/FullScreen'
   import OverviewMap from 'ol/control/OverviewMap'
   import ZoomSlider from 'ol/control/ZoomSlider'
-  import { Style, Fill, Stroke } from 'ol/style'
+  import { Style, Stroke } from 'ol/style'
 
-  function convertHex (hex, opacity) {
-    var r, g, b, result
-    hex = hex.replace('#', '')
-    r = parseInt(hex.substring(0, 2), 16)
-    g = parseInt(hex.substring(2, 4), 16)
-    b = parseInt(hex.substring(4, 6), 16)
-
-    result = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity / 100 + ')'
-    return result
-  }
   // Custom projection for static Image layer
   let x = 1024 * 10000
   let y = 968 * 10000
@@ -388,18 +209,16 @@
   const easeInOut = t => 1 - Math.pow(1 - t, 3)
 
   export default {
-    name: 'HurricaneFlorence',
+    name: 'nycPowerlines',
     data () {
       return {
-        center: [-78.858775, 35.074792],
-        zoom: 12,
+        center: [-73.851271, 40.725070],
+        zoom: 13,
         rotation: 0,
         selectedFeatures: [],
         deviceCoordinate: undefined,
         featureID: 0,
-        parcelValue: undefined,
-        bldgValue: undefined,
-        Props: {},
+        powerline: undefined,
         mapPanel: {
           tab: 'layers',
         },
@@ -429,86 +248,18 @@
         // layers config
         layers: [
           {
-            id: 'cumber_fld_flddepth',
-            title: 'Florence Flood Levels',
-            cmp: 'vl-layer-tile',
-            visible: true,
-            source: {
-              cmp: 'vl-source-xyz',
-              // url: 'https://hurricane-florence-tilestache.herokuapp.com/cumber_fld_flddepth/{z}/{x}/{y}.pbf',
-              // url: 'http://127.0.0.1:8080/cumber_fld_flddepth/{z}/{x}/{y}.png',
-              // url: 'http://cumberstache.s3-website.us-east-1.amazonaws.com/cumber_fld_flddepth/{z}/{x}/{y}.png',
-              url: 'http://s3.wasabisys.com/cumberstatche/cumber_fld_flddepth/{z}/{x}/{y}.png',
-            },
-          },
-          {
-            id: 'cumber_fld_haz',
-            title: 'FEMA Flood Hazard Zones',
-            cmp: 'vl-layer-tile',
+            id: 'nyc_powerlines',
+            title: 'NYC Powerlines',
+            cmp: 'vl-layer-vector',
             visible: false,
             source: {
-              cmp: 'vl-source-xyz',
-              // url: 'https://hurricane-florence-tilestache.herokuapp.com/cumber_fld_haz/{z}/{x}/{y}.pbf',
-              // url: 'http://127.0.0.1:8080/cumber_fld_haz/{z}/{x}/{y}.pbf',
-              // url: 'http://127.0.0.1:8080/cumber_fld_haz/{z}/{x}/{y}.png',
-              url: 'http://s3.wasabisys.com/cumberstatche/cumber_fld_haz/{z}/{x}/{y}.png',
-            },
-          },
-          {
-            id: 'cumber_fld_par_flddepth',
-            title: 'Flooded Areas in Property Parcels',
-            cmp: 'vl-layer-tile',
-            visible: false,
-            source: {
-              cmp: 'vl-source-xyz',
-              // url: 'https://hurricane-florence-tilestache.herokuapp.com/cumber_fld_par_flddepth/{z}/{x}/{y}.pbf',
-              // url: 'http://127.0.0.1:8080/cumber_fld_par_flddepth/{z}/{x}/{y}.pbf',
-              // url: 'http://127.0.0.1:8080/cumber_fld_par_flddepth/{z}/{x}/{y}.png',
-              url: 'http://s3.wasabisys.com/cumberstatche/cumber_fld_par_flddepth/{z}/{x}/{y}.png',
+              cmp: 'vl-source-vector',
+              url: 'http://localhost:8000/api/fdr_18001_0_11_Model/?format=json',
             },
             style: [
               {
                 cmp: 'vl-style-func',
-                factory: this.getFldParDepthStyle,
-              },
-            ],
-          },
-          {
-            id: 'cumber_fld_par',
-            title: 'Flooded Property Parcels',
-            cmp: 'vl-layer-vector-tile',
-            ref: 'vtLayer',
-            visible: false,
-            source: {
-              cmp: 'vl-source-vector-tile',
-              // url: 'https://hurricane-florence-tilestache.herokuapp.com/cumber_fld_par/{z}/{x}/{y}.pbf',
-              // url: 'http://127.0.0.1:8080/cumber_fld_par/{z}/{x}/{y}.pbf',
-              url: 'http://s3.wasabisys.com/cumberstatche/cumber_fld_par/{z}/{x}/{y}.pbf',
-            },
-            style: [
-              {
-                cmp: 'vl-style-func',
-                factory: this.getFldParStyle,
-              },
-            ],
-          },
-          {
-            id: 'cumber_fld_parbldg',
-            title: 'Flooded Property Buildings',
-            cmp: 'vl-layer-vector-tile',
-            ref: 'vtLayer',
-            visible: false,
-            source: {
-              cmp: 'vl-source-vector-tile',
-              // url: 'https://hurricane-florence-tilestache.herokuapp.com/cumber_fld_parbldg/{z}/{x}/{y}.pbf',
-              // url: 'http://127.0.0.1:8080/cumber_fld_parbldg/{z}/{x}/{y}.pbf',
-              url: 'http://s3.wasabisys.com/cumberstatche/cumber_fld_parbldg/{z}/{x}/{y}.pbf',
-
-            },
-            style: [
-              {
-                cmp: 'vl-style-func',
-                factory: this.getFldParBldgStyle,
+                factory: this.getNYC_PowerlinesStyle,
               },
             ],
           },
@@ -521,41 +272,7 @@
       geometryTypeToCmpName (type) {
         return 'vl-geom-' + kebabCase(type)
       },
-      getFldParDepthStyle () {
-        return feature => {
-          let selected = !!this.vtSelection[feature.get(this.vtIdProp)]
-
-          return [
-            new Style({
-              stroke: new Stroke({
-                color: selected ? 'rgba(255,239,10,0.8)' : '#FA0312', // feature.get('color'),
-                width: selected ? 1 : 0.5,
-              }),
-              fill: new Fill({
-                color: selected ? 'rgba(255,239,10,0.8)' : feature.get('color'),
-              }),
-            }),
-          ]
-        }
-      },
-      getFldParStyle () {
-        return feature => {
-          let selected = !!this.vtSelection[feature.get(this.vtIdProp)]
-
-          return [
-            new Style({
-              stroke: new Stroke({
-                color: selected ? 'rgba(255,239,10,0.8)' : '#535263', // feature.get('color'),
-                width: selected ? 1 : 0.5,
-              }),
-              fill: new Fill({
-                color: selected ? 'rgba(255,239,10,0.8)' : convertHex(feature.get('color'), 50),
-              }),
-            }),
-          ]
-        }
-      },
-      getFldParBldgStyle () {
+      getNYC_PowerlinesStyle () {
         return feature => {
           let selected = !!this.vtSelection[feature.get(this.vtIdProp)]
 
@@ -564,9 +281,6 @@
               stroke: new Stroke({
                 color: selected ? 'rgba(255,239,10,0.8)' : feature.get('color'),
                 width: selected ? 1 : 0.5,
-              }),
-              fill: new Fill({
-                color: selected ? 'rgba(255,239,10,0.8)' : feature.get('color'),
               }),
             }),
           ]
@@ -666,10 +380,8 @@
           this.vtSelection[fid] = feature
 
           let properties = feature.getProperties()
-          this.featureID = properties['parno']
-          this.parcelValue = properties['parval']
-          this.bldgValue = properties['bldg_value']
-          this.Props = properties
+          this.featureID = properties['id']
+          this.powerline = properties['powerline']
           // force redraw of layer style
           this.$refs.vtLayer.refresh()
         }
@@ -692,7 +404,7 @@
     margin: 0
     padding: 0
 
-  .HurricaneFlorence
+  .nycPowerlines
     position: relative
 
     .map
