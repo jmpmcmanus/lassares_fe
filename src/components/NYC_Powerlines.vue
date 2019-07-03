@@ -143,18 +143,11 @@
                   <table class="table is-fullwidth">
                     <tr>
                       <td style="background-color: hsla(0, 0%, 2%, 1)">&nbsp;</td>
-                      <td>Flooded Buildings</td>
-                    </tr>
-                    <tr>
-                      <td style="background-color: hsla(30, 1%, 38%, 1)">&nbsp;</td>
-                      <td>Buildings in Flooded Parcels, but not Flooded</td>
+                      <td>Powerlines</td>
                     </tr>
                     <tr>
                       <td><b>Source</b></td>
                       <td>This data was derived from 
-                        <a href="https://usace.maps.arcgis.com/apps/webappviewer/index.html?id=d9b3aab757f64e1897f8a75efd4d3975" target="_blank">
-                        US Army Corp of Engineers, Modeled Flood Depth Data</a> and 
-                        <a href="http://opendata.co.cumberland.nc.us/" target="_blank">Cumberland County building data</a>
                       </td>
                     </tr>
                   </table>
@@ -224,7 +217,7 @@
         },
         panelOpen: true,
         mapVisible: true,
-        vtIdProp: 'gid',
+        vtIdProp: 'id',
         vtSelection: {},
         vtSelectMode: 'single',
         drawType: undefined,
@@ -279,8 +272,8 @@
           return [
             new Style({
               stroke: new Stroke({
-                color: selected ? 'rgba(255,239,10,0.8)' : feature.get('color'),
-                width: selected ? 1 : 0.5,
+                color: selected ? 'rgba(0,0,0,1)' : feature.get('color'),
+                width: selected ? 3 : 2.5,
               }),
             }),
           ]
