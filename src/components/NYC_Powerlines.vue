@@ -15,11 +15,22 @@
                  @click="onMapDoneClick(), deviceCoordinate = undefined">
                  <b-icon icon="close"></b-icon>
               </a>
+                <div v-if="powerline !== undefined">
+                  </br>
+                  <b>Powerline</b>
+                </div>
+                <div v-if="measurement !== undefined">
+                  </br>
+                  <b>Measurement:</b> {{ measurement }}
+                </div>
             </header>
             <div class="card-content">
               <div class="content">
                 <div v-if="powerline !== undefined">
-                  Powerline: {{ powerline }}</br>
+                  {{ powerline }}</br>
+                </div>
+                <div v-if="value !== undefined">
+                  Value: {{ value }}</br>
                 </div>
               </div>
             </div>
@@ -131,12 +142,18 @@
                 <div class="content">
                   <table class="table is-fullwidth">
                     <tr>
-                      <td style="background-color: hsla(0, 0%, 2%, 1)">&nbsp;</td>
+                      <!--// style="background-color: hsla(0, 0%, 2%, 1)" &nbsp; -->
+                      <td><hr style="border-top: 3px dashed black"/></td>
                       <td>Powerlines</td>
                     </tr>
                     <tr>
+                      <!--// style="background-color: hsla(0, 0%, 2%, 1)" &nbsp; -->
+                      <td><span class="dot"></span></td>
+                      <td>Test Measurments</td>
+                    </tr>
+                    <tr>
                       <td><b>Source</b></td>
-                      <td>This data was derived from 
+                      <td>This data was derived from nothing.
                       </td>
                     </tr>
                   </table>
@@ -173,7 +190,7 @@
   import FullScreen from 'ol/control/FullScreen'
   import OverviewMap from 'ol/control/OverviewMap'
   import ZoomSlider from 'ol/control/ZoomSlider'
-  import { Style, Stroke } from 'ol/style'
+  import { Style, Stroke, Fill, Circle } from 'ol/style'
 
   // Custom projection for static Image layer
   let x = 1024 * 10000
@@ -199,7 +216,9 @@
         rotation: 0,
         selectedFeatures: [],
         deviceCoordinate: undefined,
-        powerline: 'hold',
+        powerline: undefined,
+        measurement: undefined,
+        value: undefined,
         mapPanel: {
           tab: 'layers',
         },
@@ -244,6 +263,22 @@
               },
             ],
           },
+          {
+            id: 'test_measurements',
+            title: 'Test Measurements',
+            cmp: 'vl-layer-vector',
+            visible: true,
+            source: {
+              cmp: 'vl-source-vector',
+              url: 'http://localhost:8000/api/testdata_Model/?format=json',
+            },
+            style: [
+              {
+                cmp: 'vl-style-func',
+                factory: this.Test_MeasurementsStyle,
+              },
+            ],
+          },
         ],
       }
     },
@@ -262,6 +297,25 @@
               stroke: new Stroke({
                 color: selected ? 'rgba(0,0,0,1)' : feature.get('color'),
                 width: selected ? 3 : 2.5,
+                lineDash: [5, 5, 5],
+              }),
+            }),
+          ]
+        }
+      },
+      Test_MeasurementsStyle () {
+        return feature => {
+          // let selected = !!this.vtSelection[feature.get(this.vtIdProp)]
+
+          return [
+            new Style({
+              image: new Circle({
+                // radius: selected ? 7 : 10 * feature.get(this.value),
+                radius: 5,
+                fill: new Fill({ color: 'red' }),
+                stroke: new Stroke({
+                  color: [255, 0, 0], width: 2,
+                }),
               }),
             }),
           ]
@@ -352,16 +406,18 @@
         } else if (features) {
           this.deviceCoordinate = evt.coordinate
           let feature = features[0]
-          let fid = feature.get(this.vtIdProp)
+          // let fid = feature.get(this.vtIdProp)
 
           if (this.vtSelectMode === 'single') {
             this.vtSelection = {}
           }
           // add selected feature to lookup
-          this.vtSelection[fid] = feature
+          // this.vtSelection[fid] = feature
 
           let properties = feature.getProperties()
           this.powerline = properties['powerline']
+          this.measurement = properties['measurement']
+          this.value = properties['value']
           // force redraw of layer style
           // this.$refs.vtLayer.refresh()
         }
@@ -453,5 +509,12 @@
 
       .content
         word-break: break-all
+
+  .dot
+    height: 15px;
+    width: 15px;
+    background-color: red
+    border-radius: 50%;
+    display: inline-block
 
 </style>
