@@ -11,11 +11,6 @@
         <template slot-scope="popup">
           <section class="card">
             <header class="card-header">
-              <div v-if="featureID !== undefined">
-                <p class="card-header-title">
-                  ID: {{ featureID }}
-                </p>
-              </div>
               <a class="card-header-icon" title="Close"
                  @click="onMapDoneClick(), deviceCoordinate = undefined">
                  <b-icon icon="close"></b-icon>
@@ -23,15 +18,9 @@
             </header>
             <div class="card-content">
               <div class="content">
-                <div v-if="featureID !== undefined">
-                  <div if="powerline !== undefined">
-                    Powerline: {{ powerline }}</br>
-                  </div>
+                <div v-if="powerline !== undefined">
+                  Powerline: {{ powerline }}</br>
                 </div>
-                <div v-else-if="featureID === undefined">
-                </div>
-                <div v-else>
-                </div> 
               </div>
             </div>
           </section>
@@ -127,7 +116,7 @@
             </tr>
             <tr>
               <th>Selected features</th>
-              <td>{{ featureID }}</td>
+              <td>{{ powerline }}</td>
             </tr>
           </table>
         </div>
@@ -135,7 +124,7 @@
         <div class="panel-block" v-show="mapPanel.tab === 'legend'">
           <table class="table is-fullwidth">
             <tr>
-              <b-collapse :open="false">
+              <b-collapse :open="true">
                 <div slot="trigger">
                    <th>NYC Powerlines</th>
                 </div>
@@ -210,8 +199,7 @@
         rotation: 0,
         selectedFeatures: [],
         deviceCoordinate: undefined,
-        featureID: 0,
-        powerline: undefined,
+        powerline: 'hold',
         mapPanel: {
           tab: 'layers',
         },
@@ -244,7 +232,7 @@
             id: 'nyc_powerlines',
             title: 'NYC Powerlines',
             cmp: 'vl-layer-vector',
-            visible: false,
+            visible: true,
             source: {
               cmp: 'vl-source-vector',
               url: 'http://localhost:8000/api/fdr_18001_0_11_Model/?format=json',
@@ -360,7 +348,7 @@
         if (!features) {
           this.vtSelection = {}
           // force redraw of layer style
-          this.$refs.vtLayer.refresh()
+          // this.$refs.vtLayer.refresh()
         } else if (features) {
           this.deviceCoordinate = evt.coordinate
           let feature = features[0]
@@ -373,16 +361,15 @@
           this.vtSelection[fid] = feature
 
           let properties = feature.getProperties()
-          this.featureID = properties['id']
           this.powerline = properties['powerline']
           // force redraw of layer style
-          this.$refs.vtLayer.refresh()
+          // this.$refs.vtLayer.refresh()
         }
       },
       onMapDoneClick () {
         this.vtSelection = {}
         // force redraw of layer style
-        this.$refs.vtLayer.refresh()
+        // this.$refs.vtLayer.refresh()
       },
     },
   }
