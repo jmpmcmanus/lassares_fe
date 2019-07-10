@@ -17,20 +17,31 @@
               </a>
                 <div v-if="powerline !== undefined">
                   </br>
-                  <b>Powerline</b>
+                  <b>Feeder: {{ title }}</b>
                 </div>
-                <div v-if="measurement !== undefined">
+                <div v-if="chem_id !== undefined">
                   </br>
-                  <b>Measurement:</b> {{ measurement }}
+                  <b>Measurement:</b> {{ chem_id }}
                 </div>
             </header>
             <div class="card-content">
               <div class="content">
                 <div v-if="powerline !== undefined">
-                  {{ powerline }}</br>
+                  Powerline: {{ powerline }}</br>
+                  Voltage: {{ voltage }}</br>
+                  Service Date: {{service_date}}
                 </div>
-                <div v-if="value !== undefined">
-                  Value: {{ value }}</br>
+                <div v-if="concentrat !== undefined">
+                  Concentration: {{ Concentrat }}</br>
+                  Timestamp: {{ timestamp }}
+                  Device ID: {{ device_id }}</br>
+                  Job ID: {{ job_id }}</br>
+                  Air Temperature: {{ amb_temp }}</br>
+                  Air Pressure: {{ air_pressu }}</br>
+                  Relative Humidity: {{ rel_humid }}</br>
+                  Precipitation: {{ precip }}</br>
+                  Wind Speed: {{ wind_speed }}</br>
+                  Wind Direction: {{ wind_direc }}
                 </div>
               </div>
             </div>
@@ -216,9 +227,21 @@
         rotation: 0,
         selectedFeatures: [],
         deviceCoordinate: undefined,
+        title: undefined,
         powerline: undefined,
-        measurement: undefined,
-        value: undefined,
+        voltage: undefined,
+        service_data: undefined,
+        chem_id: undefined,
+        concentrat: undefined,
+        timestamp: undefined,
+        device_id: undefined,
+        job_id: undefined,
+        amb_temp: undefined,
+        air_pressu: undefined,
+        rel_humid: undefined,
+        precip: undefined,
+        wind_speed: undefined,
+        wind_direc: undefined,
         mapPanel: {
           tab: 'layers',
         },
@@ -415,9 +438,22 @@
           // this.vtSelection[fid] = feature
 
           let properties = feature.getProperties()
+          this.title = properties['title']
           this.powerline = properties['powerline']
-          this.measurement = properties['measurement']
-          this.value = properties['value']
+          this.voltage = properties['voltage']
+          this.service_date = properties['service_date']
+          this.chem_id = properties['chem_id']
+          this.concentrat = properties['concentrat']
+          this.timestamp = properties['timestamp']
+          this.device_id = properties['timestamp']
+          this.job_id = properties['job_id']
+          this.amb_temp = properties['amb_temp']
+          this.air_pressu = properties['air_pressu']
+          this.rel_humid = properties['rel_humid']
+          this.precip = properties['precip']
+          this.wind_speed = properties['wind_speed']
+          this.wind_direc = properties['wind_direc']
+
           // force redraw of layer style
           // this.$refs.vtLayer.refresh()
         }
