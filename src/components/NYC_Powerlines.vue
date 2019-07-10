@@ -202,6 +202,30 @@
   import OverviewMap from 'ol/control/OverviewMap'
   import ZoomSlider from 'ol/control/ZoomSlider'
   import { Style, Stroke, Fill, Circle } from 'ol/style'
+  import { DEVICE_PIXEL_RATIO } from 'ol/has.js'
+  
+  let canvas = document.createElement('canvas')
+  let context = canvas.getContext('2d')
+  let pixelRatio = DEVICE_PIXEL_RATIO
+
+  let pattern = (function () {
+    canvas.width = 8 * pixelRatio
+    canvas.height = 8 * pixelRatio
+    // white background
+    context.fillStyle = 'rgb(191, 195, 199)'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    // outer circle
+    context.fillStyle = 'rgb(46, 9, 46, 0.5)'
+    context.beginPath()
+    context.arc(4 * pixelRatio, 4 * pixelRatio, 3 * pixelRatio, 0, 2 * Math.PI)
+    context.fill()
+    // inner circle
+    context.fillStyle = 'rgb(26, 6, 69)'
+    context.beginPath()
+    context.arc(4 * pixelRatio, 4 * pixelRatio, 1.5 * pixelRatio, 0, 2 * Math.PI)
+    context.fill()
+    return context.createPattern(canvas, 'repeat')
+  }())
 
   // Custom projection for static Image layer
   let x = 1024 * 10000
@@ -318,9 +342,13 @@
           return [
             new Style({
               stroke: new Stroke({
-                color: selected ? 'rgba(0,0,0,1)' : feature.get('color'),
-                width: selected ? 3 : 2.5,
-                lineDash: [5, 5, 5],
+                color: pattern,
+                // color: selected ? 'rgba(0,0,0,1)' : feature.get('color'),
+                width: selected ? 3.5 : 3,
+                // lineDash: [5, 5, 5],
+                lineCap: 'round',
+                lineJoin: 'bevel',
+                // width: 'auto',
               }),
             }),
           ]
@@ -552,5 +580,8 @@
     background-color: red
     border-radius: 50%;
     display: inline-block
+
+  .image
+    background-image: url('~@/assets/utransmission.png');
 
 </style>
