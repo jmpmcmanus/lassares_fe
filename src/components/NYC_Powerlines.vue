@@ -32,7 +32,7 @@
                   Service Date: {{service_date}}
                 </div>
                 <div v-if="concentrat !== undefined">
-                  Concentration: {{ Concentrat }}</br>
+                  Concentration: {{ concentrat }}</br>
                   Timestamp: {{ timestamp }}
                   Device ID: {{ device_id }}</br>
                   Job ID: {{ job_id }}</br>
@@ -138,7 +138,12 @@
             </tr>
             <tr>
               <th>Selected features</th>
-              <td>{{ powerline }}</td>
+              <div v-if='powerline'>
+                <td>{{ powerline }}</td>
+              </div>
+              <div v-else-if='chem_id'>
+                <td>{{ chem_id }}</td>
+              </div>
             </tr>
           </table>
         </div>
@@ -158,9 +163,49 @@
                       <td>Powerlines</td>
                     </tr>
                     <tr>
+                      <td><b>Source</b></td>
+                      <td>This data was derived from nothing.
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </b-collapse>
+            </tr>
+            <tr>
+              <b-collapse :open="true">
+                <div slot="trigger">
+                   <th>PFC 1 Bubbles</th>
+                </div>
+                <div class="content">
+                  <table class="table is-fullwidth">
+                    <tr>
                       <!--// style="background-color: hsla(0, 0%, 2%, 1)" &nbsp; -->
                       <td><span class="dot"></span></td>
                       <td>Test Measurments</td>
+                    </tr>
+                    <tr>
+                      <td><b>Source</b></td>
+                      <td>This data was derived from nothing.
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </b-collapse>
+            </tr>
+            <tr>
+              <b-collapse :open="false">
+                <div slot="trigger">
+                   <th>PFC 1 Heat</th>
+                </div>
+                <div class="content">
+                  <table class="table is-fullwidth">
+                    <tr>
+                      <td><input id="radius" type="range" min="1" max="50" step="1" value="5"/></td>
+                      <td>Radius Size</td>
+                    </tr>
+                    <tr>
+                      <td><input id="blur" type="range" min="1" max="50" step="1" value="15"/></td>
+                      <td>Blur Size</td>
                     </tr>
                     <tr>
                       <td><b>Source</b></td>
@@ -249,7 +294,7 @@
         center: [-73.851271, 40.725070],
         zoom: 13,
         rotation: 0,
-        selectedFeatures: [],
+        // selectedFeatures: [],
         deviceCoordinate: undefined,
         title: undefined,
         powerline: undefined,
@@ -271,11 +316,11 @@
         },
         panelOpen: true,
         mapVisible: true,
-        vtIdProp: 'id',
+        // vtIdProp: 'id',
         vtSelection: {},
-        vtSelectMode: 'single',
+        // vtSelectMode: 'single',
         drawType: undefined,
-        drawnFeatures: [],
+        // drawnFeatures: [],
         // base layers
         baseLayers: [
           {
@@ -337,14 +382,15 @@
       },
       getNYC_PowerlinesStyle () {
         return feature => {
-          let selected = !!this.vtSelection[feature.get(this.vtIdProp)]
+          // let selected = !!this.vtSelection[feature.get(this.vtIdProp)]
 
           return [
             new Style({
               stroke: new Stroke({
                 color: pattern,
                 // color: selected ? 'rgba(0,0,0,1)' : feature.get('color'),
-                width: selected ? 3.5 : 3,
+                // width: selected ? 3.5 : 3,
+                width: 3.5,
                 // lineDash: [5, 5, 5],
                 lineCap: 'round',
                 lineJoin: 'bevel',
@@ -361,11 +407,12 @@
           return [
             new Style({
               image: new Circle({
-                // radius: selected ? 7 : 10 * feature.get(this.value),
-                radius: 5,
-                fill: new Fill({ color: 'red' }),
+                radius: 5 + feature.get('concentrat'),
+                // radius: 5,
+                fill: new Fill({ color: 'rgba(245, 111, 66,0.7)' }),
                 stroke: new Stroke({
-                  color: [255, 0, 0], width: 2,
+                  color: 'rgba(245, 111, 66,0.7)',
+                  width: 1,
                 }),
               }),
             }),
@@ -459,9 +506,9 @@
           let feature = features[0]
           // let fid = feature.get(this.vtIdProp)
 
-          if (this.vtSelectMode === 'single') {
+          /* if (this.vtSelectMode === 'single') {
             this.vtSelection = {}
-          }
+          } */
           // add selected feature to lookup
           // this.vtSelection[fid] = feature
 
@@ -473,7 +520,7 @@
           this.chem_id = properties['chem_id']
           this.concentrat = properties['concentrat']
           this.timestamp = properties['timestamp']
-          this.device_id = properties['timestamp']
+          this.device_id = properties['device_id']
           this.job_id = properties['job_id']
           this.amb_temp = properties['amb_temp']
           this.air_pressu = properties['air_pressu']
@@ -577,11 +624,8 @@
   .dot
     height: 15px;
     width: 15px;
-    background-color: red
+    background-color: #f56f4270;
     border-radius: 50%;
     display: inline-block
-
-  .image
-    background-image: url('~@/assets/utransmission.png');
 
 </style>
