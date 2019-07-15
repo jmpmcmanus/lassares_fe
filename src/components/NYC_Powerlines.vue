@@ -7,47 +7,71 @@
       <!-- map view aka ol.View -->
       <vl-view ref="view" :center.sync="center" :zoom.sync="zoom" :rotation.sync="rotation"></vl-view>
 
-      <vl-overlay class="feature-popup" v-if="deviceCoordinate" :position="deviceCoordinate" style="background: white; padding: 10px">
-        <template slot-scope="popup">
-          <section class="card">
-            <header class="card-header">
-              <a class="card-header-icon" title="Close"
-                 @click="onMapDoneClick(), deviceCoordinate = undefined">
-                 <b-icon icon="close"></b-icon>
-              </a>
-                <div v-if="powerline !== undefined">
-                  </br>
-                  <b>Feeder: {{ title }}</b>
+      <!-- interactions -->
+      <!-- v-if="drawType == null" -->
+      <vl-interaction-select :features.sync="selectedFeatures">
+        <template slot-scope="select">
+          <!-- select styles -->
+          <vl-style-box>
+            <vl-style-stroke color="#423e9e" :width="7"></vl-style-stroke>
+            <vl-style-fill :color="[254, 178, 76, 0.7]"></vl-style-fill>
+            <vl-style-circle :radius="5">
+              <vl-style-stroke color="#423e9e" :width="7"></vl-style-stroke>
+              <vl-style-fill :color="[254, 178, 76, 0.7]"></vl-style-fill>
+            </vl-style-circle>
+          </vl-style-box>
+          <vl-style-box :z-index="1">
+            <vl-style-stroke color="#d43f45" :width="2"></vl-style-stroke>
+            <vl-style-circle :radius="5">
+              <vl-style-stroke color="#d43f45" :width="2"></vl-style-stroke>
+            </vl-style-circle>
+          </vl-style-box>
+          <!--// select styles -->
+
+          <!-- selected feature popup -->
+          <vl-overlay class="feature-popup" v-for="feature in select.features" :key="feature.id" :id="feature.id"
+                      :position="pointOnSurface(feature.geometry)" :auto-pan="true" :auto-pan-animation="{ duration: 300 }">
+            <template slot-scope="popup">
+              <section class="card">
+                <header class="card-header">
+                  <p class="card-header-title">
+                    Feature ID {{ feature.id }}
+                  </p>
+                  <a class="card-header-icon" title="Close"
+                     @click="selectedFeatures = selectedFeatures.filter(f => f.id !== feature.id)">
+                    <b-icon icon="close"></b-icon>
+                  </a>
+                </header>
+                <div class="card-content">
+                  <div class="content">
+                    <div v-if="pid == feature.properties['powerline']">
+                      Powerline: {{ feature.properties['powerline'] }}</br>
+                      Voltage: {{ feature.properties['voltage'] }}</br>
+                      Service Date: {{ feature.properties['service_date'] }}
+                    </div>
+                    <div v-else-if="pid == feature.properties['chem_id']">
+                      Chemical ID: {{ feature.properties['chem_id'] }}</br>
+                      Concentration: {{ feature.properties['concentrat'] }}</br>
+                      Timestamp: {{ feature.properties['timestamp'] }}
+                      Device ID: {{ feature.properties['device_id'] }}</br>
+                      Job ID: {{ feature.properties['job_id'] }}</br>
+                      Air Temperature: {{ feature.properties['amb_temp'] }}</br>
+                      Air Pressure: {{ feature.properties['air_pressu'] }}</br>
+                      Relative Humidity: {{ feature.properties['rel_humid'] }}</br>
+                      Precipitation: {{ feature.properties['precip'] }}</br>
+                      Wind Speed: {{ feature.properties['wind_speed'] }}</br>
+                      Wind Direction: {{ feature.properties['wind_direc'] }}
+                    </div>
+                    </p>
+                  </div>
                 </div>
-                <div v-if="chem_id !== undefined">
-                  </br>
-                  <b>Measurement:</b> {{ chem_id }}
-                </div>
-            </header>
-            <div class="card-content">
-              <div class="content">
-                <div v-if="powerline !== undefined">
-                  Powerline: {{ powerline }}</br>
-                  Voltage: {{ voltage }}</br>
-                  Service Date: {{service_date}}
-                </div>
-                <div v-if="concentrat !== undefined">
-                  Concentration: {{ concentrat }}</br>
-                  Timestamp: {{ timestamp }}
-                  Device ID: {{ device_id }}</br>
-                  Job ID: {{ job_id }}</br>
-                  Air Temperature: {{ amb_temp }}</br>
-                  Air Pressure: {{ air_pressu }}</br>
-                  Relative Humidity: {{ rel_humid }}</br>
-                  Precipitation: {{ precip }}</br>
-                  Wind Speed: {{ wind_speed }}</br>
-                  Wind Direction: {{ wind_direc }}
-                </div>
-              </div>
-            </div>
-          </section>
-        </template>        
-      </vl-overlay>
+              </section>
+            </template>
+          </vl-overlay>
+          <!--// selected popup -->
+        </template>
+      </vl-interaction-select>
+      <!--// interactions -->
 
       <!-- geolocation -->
       <vl-geoloc @update:position="onUpdatePosition">
@@ -138,12 +162,7 @@
             </tr>
             <tr>
               <th>Selected features</th>
-              <div v-if='powerline'>
-                <td>{{ powerline }}</td>
-              </div>
-              <div v-else-if='chem_id'>
-                <td>{{ chem_id }}</td>
-              </div>
+              <td>{{ pid }}</td>
             </tr>
           </table>
         </div>
@@ -182,30 +201,6 @@
                       <!--// style="background-color: hsla(0, 0%, 2%, 1)" &nbsp; -->
                       <td><span class="dot"></span></td>
                       <td>Test Measurments</td>
-                    </tr>
-                    <tr>
-                      <td><b>Source</b></td>
-                      <td>This data was derived from nothing.
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              </b-collapse>
-            </tr>
-            <tr>
-              <b-collapse :open="false">
-                <div slot="trigger">
-                   <th>PFC 1 Heat</th>
-                </div>
-                <div class="content">
-                  <table class="table is-fullwidth">
-                    <tr>
-                      <td><input id="radius" type="range" min="1" max="50" step="1" value="5"/></td>
-                      <td>Radius Size</td>
-                    </tr>
-                    <tr>
-                      <td><input id="blur" type="range" min="1" max="50" step="1" value="15"/></td>
-                      <td>Blur Size</td>
                     </tr>
                     <tr>
                       <td><b>Source</b></td>
@@ -294,34 +289,15 @@
         center: [-73.851271, 40.725070],
         zoom: 13,
         rotation: 0,
-        // selectedFeatures: [],
+        pid: undefined,
+        selectedFeatures: [],
         deviceCoordinate: undefined,
-        title: undefined,
-        powerline: undefined,
-        voltage: undefined,
-        service_data: undefined,
-        chem_id: undefined,
-        concentrat: undefined,
-        timestamp: undefined,
-        device_id: undefined,
-        job_id: undefined,
-        amb_temp: undefined,
-        air_pressu: undefined,
-        rel_humid: undefined,
-        precip: undefined,
-        wind_speed: undefined,
-        wind_direc: undefined,
         mapPanel: {
           tab: 'layers',
         },
         panelOpen: true,
         mapVisible: true,
-        // vtIdProp: 'id',
         vtSelection: {},
-        // vtSelectMode: 'single',
-        drawType: undefined,
-        // drawnFeatures: [],
-        // base layers
         baseLayers: [
           {
             name: 'osm',
@@ -382,16 +358,11 @@
       },
       getNYC_PowerlinesStyle () {
         return feature => {
-          // let selected = !!this.vtSelection[feature.get(this.vtIdProp)]
-
           return [
             new Style({
               stroke: new Stroke({
                 color: pattern,
-                // color: selected ? 'rgba(0,0,0,1)' : feature.get('color'),
-                // width: selected ? 3.5 : 3,
                 width: 3.5,
-                // lineDash: [5, 5, 5],
                 lineCap: 'round',
                 lineJoin: 'bevel',
                 // width: 'auto',
@@ -402,8 +373,6 @@
       },
       Test_MeasurementsStyle () {
         return feature => {
-          // let selected = !!this.vtSelection[feature.get(this.vtIdProp)]
-
           return [
             new Style({
               image: new Circle({
@@ -489,9 +458,6 @@
       },
       showMapPanelTab (tab) {
         this.mapPanel.tab = tab
-        if (tab !== 'draw') {
-          this.drawType = undefined
-        }
       },
       onMapClick (evt) {
         let pixel = evt.pixel
@@ -499,44 +465,17 @@
 
         if (!features) {
           this.vtSelection = {}
-          // force redraw of layer style
-          // this.$refs.vtLayer.refresh()
         } else if (features) {
           this.deviceCoordinate = evt.coordinate
           let feature = features[0]
-          // let fid = feature.get(this.vtIdProp)
-
-          /* if (this.vtSelectMode === 'single') {
-            this.vtSelection = {}
-          } */
-          // add selected feature to lookup
-          // this.vtSelection[fid] = feature
-
           let properties = feature.getProperties()
-          this.title = properties['title']
-          this.powerline = properties['powerline']
-          this.voltage = properties['voltage']
-          this.service_date = properties['service_date']
-          this.chem_id = properties['chem_id']
-          this.concentrat = properties['concentrat']
-          this.timestamp = properties['timestamp']
-          this.device_id = properties['device_id']
-          this.job_id = properties['job_id']
-          this.amb_temp = properties['amb_temp']
-          this.air_pressu = properties['air_pressu']
-          this.rel_humid = properties['rel_humid']
-          this.precip = properties['precip']
-          this.wind_speed = properties['wind_speed']
-          this.wind_direc = properties['wind_direc']
 
-          // force redraw of layer style
-          // this.$refs.vtLayer.refresh()
+          if (properties['chem_id']) {
+            this.pid = properties['chem_id']
+          } else if (properties['powerline']) {
+            this.pid = properties['powerline']
+          }
         }
-      },
-      onMapDoneClick () {
-        this.vtSelection = {}
-        // force redraw of layer style
-        // this.$refs.vtLayer.refresh()
       },
     },
   }
