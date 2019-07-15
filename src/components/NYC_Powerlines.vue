@@ -493,7 +493,7 @@
             this.chem_id = this.pid
             this.concentrat = properties['concentrat']
             this.timestamp = properties['timestamp']
-            this.vtSelection.push([this.timestamp, this.concentrat])
+            this.vtSelection.push({ x: this.timestamp, y: this.concentrat })
             console.log(this.vtSelection[0])
           } else if (properties['powerline']) {
             this.pid = properties['powerline']
