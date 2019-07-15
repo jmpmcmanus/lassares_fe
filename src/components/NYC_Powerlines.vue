@@ -13,10 +13,10 @@
         <template slot-scope="select">
           <!-- select styles -->
           <vl-style-box>
-            <vl-style-stroke color="#423e9e" :width="7"></vl-style-stroke>
+            <vl-style-stroke color="#33201e" :width="7"></vl-style-stroke>
             <vl-style-fill :color="[254, 178, 76, 0.7]"></vl-style-fill>
             <vl-style-circle :radius="5">
-              <vl-style-stroke color="#423e9e" :width="7"></vl-style-stroke>
+              <vl-style-stroke color="#9e493e" :width="7"></vl-style-stroke>
               <vl-style-fill :color="[254, 178, 76, 0.7]"></vl-style-fill>
             </vl-style-circle>
           </vl-style-box>
@@ -45,14 +45,14 @@
                 <div class="card-content">
                   <div class="content">
                     <div v-if="pid == feature.properties['powerline']">
-                      Powerline: {{ feature.properties['powerline'] }}</br>
+                      Powerline: {{ powerline }}</br>
                       Voltage: {{ feature.properties['voltage'] }}</br>
                       Service Date: {{ feature.properties['service_date'] }}
                     </div>
                     <div v-else-if="pid == feature.properties['chem_id']">
-                      Chemical ID: {{ feature.properties['chem_id'] }}</br>
-                      Concentration: {{ feature.properties['concentrat'] }}</br>
-                      Timestamp: {{ feature.properties['timestamp'] }}
+                      Chemical ID: {{ chem_id }}</br>
+                      Concentration: {{ concentrat }}</br>
+                      Timestamp: {{ timestamp }}
                       Device ID: {{ feature.properties['device_id'] }}</br>
                       Job ID: {{ feature.properties['job_id'] }}</br>
                       Air Temperature: {{ feature.properties['amb_temp'] }}</br>
@@ -131,7 +131,8 @@
         <p class="panel-tabs">
           <a @click="showMapPanelTab('layers')" :class="mapPanelTabClasses('layers')">Layers</a>
           <a @click="showMapPanelTab('state')" :class="mapPanelTabClasses('state')">State</a>
-          <a @click="showMapPanelTab('legend')" :class="mapPanelTabClasses('legen')">Legend</a>
+          <a @click="showMapPanelTab('legend')" :class="mapPanelTabClasses('legend')">Legend</a>
+          <a @click="showMapPanelTab('plot')" :class="mapPanelTabClasses('plot')">Plot</a>
         </p>
 
         <div class="panel-block" v-for="layer in layers" :key="layer.id" @click="showMapPanelLayer"
@@ -213,6 +214,21 @@
             </tr>
           </table>
         </div>
+
+        <div class="panel-block" v-show="mapPanel.tab === 'plot'">
+          <table class="table is-fullwidth">
+            <tr>
+              <div v-if="pid == chem_id">
+                <th>Plot {{ pid }} Concentration</th>
+                <td>{{ concentrat }}</td>
+                <td>{{ timestamp }}</td>
+              </div>
+              <div v-else-if="pid == powerline">
+                <th>Cannot Plot Powerline</th>
+              </div>
+            </tr>
+          </table>
+        </div>
       </b-collapse>
     </div>
     <!--// map panel, controls -->
@@ -290,6 +306,10 @@
         zoom: 13,
         rotation: 0,
         pid: undefined,
+        chem_id: undefined,
+        powerline: undefined,
+        concentrat: undefined,
+        timestamp: undefined,
         selectedFeatures: [],
         deviceCoordinate: undefined,
         mapPanel: {
@@ -297,7 +317,7 @@
         },
         panelOpen: true,
         mapVisible: true,
-        vtSelection: {},
+        vtSelection: [],
         baseLayers: [
           {
             name: 'osm',
@@ -362,10 +382,9 @@
             new Style({
               stroke: new Stroke({
                 color: pattern,
-                width: 3.5,
+                width: (this.zoom / 3.7142),
                 lineCap: 'round',
                 lineJoin: 'bevel',
-                // width: 'auto',
               }),
             }),
           ]
@@ -376,8 +395,7 @@
           return [
             new Style({
               image: new Circle({
-                radius: 5 + feature.get('concentrat'),
-                // radius: 5,
+                radius: (this.zoom / 2.6) + feature.get('concentrat'),
                 fill: new Fill({ color: 'rgba(245, 111, 66,0.7)' }),
                 stroke: new Stroke({
                   color: 'rgba(245, 111, 66,0.7)',
@@ -459,21 +477,30 @@
       showMapPanelTab (tab) {
         this.mapPanel.tab = tab
       },
-      onMapClick (evt) {
-        let pixel = evt.pixel
+      onMapClick (event) {
+        let pixel = event.pixel
         let features = this.$refs.map.$map.getFeaturesAtPixel(pixel)
 
         if (!features) {
-          this.vtSelection = {}
+          this.vtSelection = []
         } else if (features) {
-          this.deviceCoordinate = evt.coordinate
+          this.deviceCoordinate = event.coordinate
           let feature = features[0]
           let properties = feature.getProperties()
 
           if (properties['chem_id']) {
             this.pid = properties['chem_id']
+            this.chem_id = this.pid
+            this.concentrat = properties['concentrat']
+            this.timestamp = properties['timestamp']
+            this.vtSelection.push([this.timestamp, this.concentrat])
+            console.log(this.vtSelection[0])
           } else if (properties['powerline']) {
             this.pid = properties['powerline']
+            this.powerline = this.pid
+            this.concentrat = undefined
+            this.timestamp = undefined
+            this.vtSelection = []
           }
         }
       },
