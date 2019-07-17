@@ -217,16 +217,21 @@
 
         <div class="panel-block" v-show="mapPanel.tab === 'plot'">
           <table class="table is-fullwidth">
-            <tr>
-              <div v-if="pid == chem_id">
-                <th>Plot {{ pid }} Concentration</th>
-                <td>{{ concentrat }}</td>
-                <td>{{ timestamp }}</td>
-              </div>
-              <div v-else-if="pid == powerline">
+            <div v-if="pid == chem_id">
+              <tr>
+                <th>{{ pid }} Concentration</th>
+              </tr>
+              <tr>
+                <td>
+                    <d3-barchart class="chart" :data='vtSelection' :options='baroptions' />
+                </td>
+              </tr>
+            </div>
+            <div v-else-if="pid == powerline">
+              <tr>
                 <th>Cannot Plot Powerline</th>
-              </div>
-            </tr>
+              </tr>
+            </div>
           </table>
         </div>
       </b-collapse>
@@ -259,6 +264,7 @@
   import ZoomSlider from 'ol/control/ZoomSlider'
   import { Style, Stroke, Fill, Circle } from 'ol/style'
   import { DEVICE_PIXEL_RATIO } from 'ol/has.js'
+  import d3Barchart from '@/mixins/vue-d3-barchart'
   
   let canvas = document.createElement('canvas')
   let context = canvas.getContext('2d')
@@ -300,10 +306,13 @@
 
   export default {
     name: 'nycPowerlines',
+    components: {
+      d3Barchart,
+    },
     data () {
       return {
         center: [-73.851271, 40.725070],
-        zoom: 13,
+        zoom: 15,
         rotation: 0,
         pid: undefined,
         chem_id: undefined,
@@ -368,6 +377,26 @@
             ],
           },
         ],
+        baroptions: {
+          rules: true,
+          axis: true,
+          labels: true,
+          padding: 0.2,
+          line: true,
+          points: false,
+          value: false,
+          gradient: {
+            stroke: true,
+          },
+          curve: {
+          },
+          getX: (d) => {
+            return d.x
+          },
+          getY: (d) => {
+            return d.y
+          },
+        },
       }
     },
     methods: {
@@ -494,7 +523,6 @@
             this.concentrat = properties['concentrat']
             this.timestamp = properties['timestamp']
             this.vtSelection.push({ x: this.timestamp, y: this.concentrat })
-            console.log(this.vtSelection[0])
           } else if (properties['powerline']) {
             this.pid = properties['powerline']
             this.powerline = this.pid
@@ -593,5 +621,11 @@
     background-color: #f56f4270;
     border-radius: 50%;
     display: inline-block
+
+  .chart
+    display: inline-block
+    width: 300px
+    height: 100px
+    margin-top: 1em
 
 </style>
