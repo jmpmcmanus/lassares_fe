@@ -223,7 +223,7 @@
               </tr>
               <tr>
                 <td>
-                    <d3-barchart class="chart" :data='vtSelection' :options='baroptions' />
+                  <d3-barchart class="chart" :pdata='vtSelection' :options='baroptions' />
                 </td>
               </tr>
             </div>
@@ -266,29 +266,6 @@
   import { DEVICE_PIXEL_RATIO } from 'ol/has.js'
   import d3Barchart from '@/mixins/vue-d3-barchart'
   
-  let canvas = document.createElement('canvas')
-  let context = canvas.getContext('2d')
-  let pixelRatio = DEVICE_PIXEL_RATIO
-
-  let pattern = (function () {
-    canvas.width = 8 * pixelRatio
-    canvas.height = 8 * pixelRatio
-    // white background
-    context.fillStyle = 'rgb(191, 195, 199)'
-    context.fillRect(0, 0, canvas.width, canvas.height)
-    // outer circle
-    context.fillStyle = 'rgb(46, 9, 46, 0.5)'
-    context.beginPath()
-    context.arc(4 * pixelRatio, 4 * pixelRatio, 3 * pixelRatio, 0, 2 * Math.PI)
-    context.fill()
-    // inner circle
-    context.fillStyle = 'rgb(26, 6, 69)'
-    context.beginPath()
-    context.arc(4 * pixelRatio, 4 * pixelRatio, 1.5 * pixelRatio, 0, 2 * Math.PI)
-    context.fill()
-    return context.createPattern(canvas, 'repeat')
-  }())
-
   // Custom projection for static Image layer
   let x = 1024 * 10000
   let y = 968 * 10000
@@ -327,6 +304,28 @@
         panelOpen: true,
         mapVisible: true,
         vtSelection: [],
+        baroptions: {
+          colors: ['blue', 'lightgreen'],
+          fontsize: 10,
+          rules: true,
+          axis: true,
+          labels: true,
+          padding: 0.1,
+          line: true,
+          points: false,
+          value: false,
+          gradient: {
+            stroke: true,
+          },
+          curve: {
+          },
+          getX: (d) => {
+            return d.x
+          },
+          getY: (d) => {
+            return d.y
+          },
+        },
         baseLayers: [
           {
             name: 'osm',
@@ -377,26 +376,6 @@
             ],
           },
         ],
-        baroptions: {
-          rules: true,
-          axis: true,
-          labels: true,
-          padding: 0.2,
-          line: true,
-          points: false,
-          value: false,
-          gradient: {
-            stroke: true,
-          },
-          curve: {
-          },
-          getX: (d) => {
-            return d.x
-          },
-          getY: (d) => {
-            return d.y
-          },
-        },
       }
     },
     methods: {
@@ -406,6 +385,28 @@
         return 'vl-geom-' + kebabCase(type)
       },
       getNYC_PowerlinesStyle () {
+        let canvas = document.createElement('canvas')
+        let context = canvas.getContext('2d')
+        let pixelRatio = DEVICE_PIXEL_RATIO
+
+        let pattern = (function () {
+          canvas.width = 8 * pixelRatio
+          canvas.height = 8 * pixelRatio
+          // white background
+          context.fillStyle = 'rgb(191, 195, 199)'
+          context.fillRect(0, 0, canvas.width, canvas.height)
+          // outer circle
+          context.fillStyle = 'rgb(46, 9, 46, 0.5)'
+          context.beginPath()
+          context.arc(4 * pixelRatio, 4 * pixelRatio, 3 * pixelRatio, 0, 2 * Math.PI)
+          context.fill()
+          // inner circle
+          context.fillStyle = 'rgb(26, 6, 69)'
+          context.beginPath()
+          context.arc(4 * pixelRatio, 4 * pixelRatio, 1.5 * pixelRatio, 0, 2 * Math.PI)
+          context.fill()
+          return context.createPattern(canvas, 'repeat')
+        }())
         return feature => {
           return [
             new Style({
@@ -624,8 +625,8 @@
 
   .chart
     display: inline-block
-    width: 300px
-    height: 100px
-    margin-top: 1em
+    width: 600px
+    height: 200px
+    margin-top: 5em
 
 </style>

@@ -10,7 +10,7 @@ export default {
 }
 </script>
 
-<style lang="sass">
+<style scoped lang="sass">
 #app
   font-family: 'Avenir', Helvetica, Arial, sans-serif
   -webkit-font-smoothing: antialiased

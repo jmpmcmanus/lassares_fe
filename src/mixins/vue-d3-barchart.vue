@@ -42,7 +42,7 @@
   <g class="chart-tip" v-if="opts.tip &amp;&amp; over">
     <rect class="chart-tip-back" v-if="opts.tipBack" :x="lineX + fontSize/2" :y="0" :width="labelW + &quot;ex&quot;" :height="label.length + .25 + &quot;em&quot;" :rx="labelW / 5" :ry="label.length" @touchstart="barClick(over)"></rect>
     <text class="label" :x="lineX + fontSize" y="0" :font-size="fontSize">
-      <tspan class="label-line" v-for="line,index in label" :key="index" :x="lineX + fontSize" dy="1.2em" :class="line.css" :style="line.style">{{line.txt}}</tspan>
+      <tspan class="bar-text" v-for="line,index in label" :key="index" :x="lineX + fontSize" dy="1.2em" :class="line.css" :style="line.style">{{line.txt}}</tspan>
     </text>
   </g>
 </svg>
@@ -59,7 +59,7 @@ const defaultOptions = {
   }, // render labels
   axis: false, // render axis
   padding: 0.1, // bar padding
-  colors: ['blue', 'lightgreen'], // colors [max, min] or null
+  colors: ['orangered', 'lightgreen'], // colors [max, min] or null
   colorInterpol: null, // color Interpolator
   getY: null, // function to get / format Y value
   getX: null, // function to get / format X value
@@ -89,7 +89,7 @@ const defaultOptions = {
 export default {
   name: 'D3-bar-chart',
   props: {
-    data: {
+    pdata: {
       type: Array,
     },
     options: {
@@ -119,8 +119,8 @@ export default {
       // default label formatter, -> array, one value per line
       formatLabel (bar, formatX, formatY) {
         return [
-          'concentration: ' + formatY(bar.yv), // changed from y to concentration
-          'datetime: ' + formatX(bar.d.x), // Changed from x to datetime and bar.xv to bar.d.x
+          'y: ' + formatY(bar.yv), // changed from y to concentration
+          'x: ' + formatX(bar.d.x), // Changed from x to datetime and bar.xv to bar.d.x
         ]
       },
       // default x  formatter
@@ -231,11 +231,11 @@ export default {
           yv: d,
           x: this.scaleX(i),
           y: this.scaleY(d) + 1,
-          color: this.colors(d, this.data[i]),
+          color: this.colors(d, this.pdata[i]),
           percentX: parseInt(this.percentX(i)),
           percentY: parseInt(this.percentY(d)),
           w: this.scaleX.bandwidth(),
-          d: this.data[i],
+          d: this.pdata[i],
         }
       })
     },
@@ -276,7 +276,7 @@ export default {
       return (dom.max === null) ? d3.max(data) : dom.max
     },
     mappedData () {
-      let data = this.data.map((d) => {
+      let data = this.pdata.map((d) => {
         return this.getY(d)
       })
       return data
@@ -285,10 +285,10 @@ export default {
       return this.opts.fontSize
     },
     fontSizeComp () {
-      let maxChars = d3.max(this.data.map((d) => {
+      let maxChars = d3.max(this.pdata.map((d) => {
         return String(d).length
       }))
-      return this.w / (maxChars * this.data.length * 2)
+      return this.w / (maxChars * this.pdata.length * 2)
     },
     margin () {
       return this.opts.margin || this.h / 10
@@ -504,67 +504,67 @@ export default {
   },
 }
 </script>
-<style lang="stylus">
-  .d3-bar-chart
-    max-height 100%
-    max-width 100%
+<style scoped lang="sass">
 
-    svg
-      overflow visible
+.d3-bar-chart
+  max-height: 100%
+  max-width: 100%
+  svg
+    overflow: visible
 
-  .bar
-    fill cyan
-    stroke none
+.bar
+  fill: #0ff
+  stroke: none
 
-  .dummy-bar
-    fill none
-    stroke none
-    pointer-events all
+.dummy-bar
+  fill: none
+  stroke: none
+  pointer-events: all
+  &.has-bars:hover
+    fill: rgba(0, 0, 0, 0.1)
 
-  .dummy-bar.has-bars
-    &:hover
-      fill alpha(black, 0.1)
+.bar-text
+  fill: #fa0505
+  font-size: 10px
 
-  .bar-text
-    fill gray
+.rulers
+  stroke-width: 1px
+  stroke: #000
 
-  .rulers
-    stroke-width 1px
-    stroke black
+.lines
+  stroke: #808080
+  stroke-width: 1px
+  stroke-opacity: 0.3
 
-  .lines
-    stroke gray
-    stroke-width 1px
-    stroke-opacity 0.3
+.axis
+  stroke-width: 1px
+  stroke: #808080
 
-  .axis
-    stroke-width 1px
-    stroke gray
+.axis-label
+  fill: #808080
+  stroke: none
+  font-size: 6px
 
-  .axis-label
-    fill gray
-    stroke none
-    font-size 8px
+.line
+  stroke: rgba(0, 0, 0, 0.5)
+  stroke-width: 2px
 
-  .line
-    stroke alpha(black, 0.5)
-    stroke-width 2px
+.curve, .curve-back
+  stroke: #000
+  stroke-width: 3px
+  fill: none
 
-  .curve, .curve-back
-    stroke black
-    stroke-width 3px
-    fill none
+.curve-point
+  fill: #808080
+  stroke: #000
 
-  .curve-point
-    fill gray
-    stroke black
+.chart-tip-back
+  fill: #000
+  stroke-width: 1px
+  stroke: #808080
+  opacity: 0.5
 
-  .chart-tip-back
-    fill black
-    stroke-width 1px
-    stroke gray
-    opacity 0.5
+.chart-line
+  pointer-events: none
 
-  .chart-line
-    pointer-events none
 </style>
