@@ -229,6 +229,9 @@
             </div>
             <div v-else-if="pid == powerline">
               <tr>
+                <th>{{ pid }} Powerline</th>
+              </tr>
+              <tr>
                 <th>Cannot Plot Powerline</th>
               </tr>
             </div>
@@ -256,7 +259,7 @@
 </template>
 
 <script>
-  import { kebabCase, camelCase } from 'lodash'
+  import { camelCase } from 'lodash'
   import { createProj, addProj, findPointOnSurface, createStyle } from 'vuelayers/lib/ol-ext'
   import ScaleLine from 'ol/control/ScaleLine'
   import FullScreen from 'ol/control/FullScreen'
@@ -306,7 +309,6 @@
         vtSelection: [],
         baroptions: {
           colors: ['blue', 'lightgreen'],
-          fontsize: 10,
           rules: true,
           axis: true,
           labels: true,
@@ -381,9 +383,6 @@
     methods: {
       camelCase,
       pointOnSurface: findPointOnSurface,
-      geometryTypeToCmpName (type) {
-        return 'vl-geom-' + kebabCase(type)
-      },
       getNYC_PowerlinesStyle () {
         let canvas = document.createElement('canvas')
         let context = canvas.getContext('2d')
