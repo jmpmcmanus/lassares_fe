@@ -260,6 +260,7 @@
 </template>
 
 <script>
+  import { camelCase } from 'lodash'
   import { findPointOnSurface, writeGeoJsonFeature } from 'vuelayers/lib/ol-ext'
   import ScaleLine from 'ol/control/ScaleLine'
   import FullScreen from 'ol/control/FullScreen'
@@ -375,6 +376,7 @@
       }
     },
     methods: {
+      camelCase,
       pointOnSurface: findPointOnSurface,
       getNYC_PowerlinesStyle () {
         let canvas = document.createElement('canvas')
