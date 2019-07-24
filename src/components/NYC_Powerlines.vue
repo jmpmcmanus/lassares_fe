@@ -2,14 +2,12 @@
   <div id="app" :class="[$options.name]">
     <!-- app map -->
     <vl-map v-if="mapVisible" class="map" ref="map" :load-tiles-while-animating="true" :load-tiles-while-interacting="true"
-            @click="onMapClick" @postcompose="onMapPostCompose"
-            data-projection="EPSG:4326" @mounted="onMapMounted">
-      <!-- map view aka ol.View -->
-      <vl-view ref="view" :center.sync="center" :zoom.sync="zoom" :rotation.sync="rotation"></vl-view>
+            @click="onMapClick" data-projection="EPSG:4326" @mounted="onMapMounted">
+       <!-- map view aka ol.View -->
+      <vl-view ref="mapView" :center.sync="center" :zoom.sync="zoom" :rotation.sync="rotation"></vl-view>
 
-      <!-- interactions -->
-      <!-- v-if="drawType == null" -->
-      <vl-interaction-select :features.sync="selectedFeatures">
+      <!-- click interactions -->
+      <vl-interaction-select ref="selectInteraction" :features.sync="selectedFeatures">
         <template slot-scope="select">
           <!-- select styles -->
           <vl-style-box>
@@ -29,62 +27,51 @@
           <!--// select styles -->
 
           <!-- selected feature popup -->
-          <vl-overlay class="feature-popup" v-for="feature in select.features" :key="feature.id" :id="feature.id"
-                      :position="pointOnSurface(feature.geometry)" :auto-pan="true" :auto-pan-animation="{ duration: 300 }">
-            <template slot-scope="popup">
-              <section class="card">
-                <header class="card-header">
-                  <p class="card-header-title">
-                    Feature ID {{ feature.id }}
-                  </p>
-                  <a class="card-header-icon" title="Close"
-                     @click="selectedFeatures = selectedFeatures.filter(f => f.id !== feature.id)">
-                    <b-icon icon="close"></b-icon>
-                  </a>
-                </header>
-                <div class="card-content">
-                  <div class="content">
-                    <div v-if="pid == feature.properties['powerline']">
-                      Powerline: {{ powerline }}</br>
-                      Voltage: {{ feature.properties['voltage'] }}</br>
-                      Service Date: {{ feature.properties['service_date'] }}
-                    </div>
-                    <div v-else-if="pid == feature.properties['chem_id']">
-                      Chemical ID: {{ chem_id }}</br>
-                      Concentration: {{ concentrat }}</br>
-                      Timestamp: {{ timestamp }}
-                      Device ID: {{ feature.properties['device_id'] }}</br>
-                      Job ID: {{ feature.properties['job_id'] }}</br>
-                      Air Temperature: {{ feature.properties['amb_temp'] }}</br>
-                      Air Pressure: {{ feature.properties['air_pressu'] }}</br>
-                      Relative Humidity: {{ feature.properties['rel_humid'] }}</br>
-                      Precipitation: {{ feature.properties['precip'] }}</br>
-                      Wind Speed: {{ feature.properties['wind_speed'] }}</br>
-                      Wind Direction: {{ feature.properties['wind_direc'] }}
-                    </div>
+          <div v-if="isBox === 'no'">
+            <vl-overlay class="feature-popup" v-for="feature in select.features" :key="feature.id" :id="feature.id"
+                        :position="pointOnSurface(feature.geometry)" :auto-pan="true" :auto-pan-animation="{ duration: 300 }">
+              <template slot-scope="popup">
+                <section class="card">
+                  <header class="card-header">
+                    <p class="card-header-title">
+                      Feature ID {{ feature.id }}
                     </p>
+                    <a class="card-header-icon" title="Close"
+                       @click="selectedFeatures = selectedFeatures.filter(f => f.id !== feature.id)">
+                      <b-icon icon="close"></b-icon>
+                    </a>
+                  </header>
+                  <div class="card-content">
+                    <div class="content">
+                      <div v-if="pid == feature.properties['powerline']">
+                        Powerline: {{ powerline }}</br>
+                        Voltage: {{ feature.properties['voltage'] }}</br>
+                        Service Date: {{ feature.properties['service_date'] }}
+                      </div>
+                      <div v-else-if="pid == feature.properties['chem_id']">
+                        Chemical ID: {{ chem_id }}</br>
+                        Concentration: {{ concentrat }}</br>
+                        Timestamp: {{ timestamp }}
+                        Device ID: {{ feature.properties['device_id'] }}</br>
+                        Job ID: {{ feature.properties['job_id'] }}</br>
+                        Air Temperature: {{ feature.properties['amb_temp'] }}</br>
+                        Air Pressure: {{ feature.properties['air_pressu'] }}</br>
+                        Relative Humidity: {{ feature.properties['rel_humid'] }}</br>
+                        Precipitation: {{ feature.properties['precip'] }}</br>
+                        Wind Speed: {{ feature.properties['wind_speed'] }}</br>
+                        Wind Direction: {{ feature.properties['wind_direc'] }}
+                      </div>
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </section>
-            </template>
-          </vl-overlay>
+                </section>
+              </template>
+            </vl-overlay>
+          </div>
           <!--// selected popup -->
         </template>
       </vl-interaction-select>
-      <!--// interactions -->
-
-      <!-- geolocation -->
-      <vl-geoloc @update:position="onUpdatePosition">
-        <template slot-scope="geoloc">
-          <vl-feature v-if="geoloc.position" id="position-feature">
-            <vl-geom-point :coordinates="geoloc.position"></vl-geom-point>
-            <vl-style-box>
-              <vl-style-icon src="../assets/marker.png" :scale="0.4" :anchor="[0.5, 1]"></vl-style-icon>
-            </vl-style-box>
-          </vl-feature>
-        </template>
-      </vl-geoloc>
-      <!--// geolocation -->
+      <!--// click interactions -->
 
       <!-- base layers -->
       <vl-layer-tile v-for="layer in baseLayers" :key="layer.name" :id="layer.name" :visible="layer.visible">
@@ -95,18 +82,12 @@
       <!-- other layers from config -->
       <component v-for="layer in layers" :is="layer.cmp" v-if="layer.visible" :key="layer.id" v-bind="layer">
         <!-- add vl-source-* -->
-        <component :is="layer.source.cmp" v-bind="layer.source">
+        <component ref="layerSource" :is="layer.source.cmp" v-bind="layer.source">
         </component>
 
         <!-- add style components if provided -->
         <!-- create vl-style-box or vl-style-func -->
         <component v-if="layer.style" v-for="(style, i) in layer.style" :key="i" :is="style.cmp" v-bind="style">
-          <!-- create inner style components: vl-style-circle, vl-style-icon, vl-style-fill, vl-style-stroke & etc -->
-          <component v-if="style.styles" v-for="(st, cmp) in style.styles" :key="cmp" :is="cmp" v-bind="st">
-            <!-- vl-style-fill, vl-style-stroke if provided -->
-            <vl-style-fill v-if="st.fill" v-bind="st.fill"></vl-style-fill>
-            <vl-style-stroke v-if="st.stroke" v-bind="st.stroke"></vl-style-stroke>
-          </component>
         </component>
         <!--// style -->
       </component>
@@ -115,13 +96,13 @@
     </vl-map>
     <!--// app map -->
 
-    <!-- map panel, controls -->
-    <div class="map-panel">
+    <!-- menu panel, controls -->
+    <div class="menu-panel">
       <b-collapse class="panel box is-paddingless" :open.sync="panelOpen">
         <div slot="trigger" class="panel-heading">
           <div class="columns">
             <div class="column is-11">
-              <strong>Map panel</strong>
+              <strong>Menu panel</strong>
             </div>
             <div class="column">
               <b-icon :icon="panelOpen ? 'chevron-up' : 'chevron-down'" size="is-small"></b-icon>
@@ -132,7 +113,6 @@
           <a @click="showMapPanelTab('layers')" :class="mapPanelTabClasses('layers')">Layers</a>
           <a @click="showMapPanelTab('state')" :class="mapPanelTabClasses('state')">State</a>
           <a @click="showMapPanelTab('legend')" :class="mapPanelTabClasses('legend')">Legend</a>
-          <a @click="showMapPanelTab('plot')" :class="mapPanelTabClasses('plot')">Plot</a>
         </p>
 
         <div class="panel-block" v-for="layer in layers" :key="layer.id" @click="showMapPanelLayer"
@@ -214,32 +194,54 @@
             </tr>
           </table>
         </div>
+      </b-collapse>
+    </div>
+    <!--// menu panel, controls -->
 
-        <div class="panel-block" v-show="mapPanel.tab === 'plot'">
+    <!-- bar panel, controls -->
+    <div class="bar-panel">
+      <b-collapse class="panel box is-paddingless" :open.sync="barpanelOpen">
+        <div slot="trigger" class="panel-heading">
+          <div class="columns">
+            <div class="column is-11">
+              <strong>bar chart panel</strong>
+            </div>
+            <div class="column">
+              <b-icon :icon="barpanelOpen ? 'chevron-up' : 'chevron-down'" size="is-small"></b-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="bar-panel-block" v-show="barPanel.tab === 'plot'"> -->
+        <div class="bar-panel-block">
           <table class="table is-fullwidth">
             <div v-if="pid == chem_id">
-              <tr>
-                <th>{{ pid }} Concentration</th>
-              </tr>
-              <tr>
-                <td>
-                  <d3-barchart class="chart" :pdata='vtSelection' :options='baroptions' />
-                </td>
-              </tr>
-            </div>
-            <div v-else-if="pid == powerline">
-              <tr>
-                <th>{{ pid }} Powerline</th>
-              </tr>
-              <tr>
-                <th>Cannot Plot Powerline</th>
-              </tr>
+              <div v-if="Object.keys(selectedFeaturesBarClick).length > 0">
+                <tr>
+                  <th>{{ pid }} Concentration</th>
+                </tr>
+                <tr>
+                  <td>
+                    <d3-barchart class="chart" :pdata='selectedFeaturesBarClick' :options='baroptions' />
+                  </td>
+                </tr>
+              </div>
+              <div v-else-if="Object.keys(selectedFeatures).length > 0">
+                <tr>
+                  <th>{{ pid }} Concentration</th>
+                </tr>
+                <tr>
+                  <td>
+                    <d3-barchart class="chart" :pdata='selectedFeatures' :options='baroptions' />
+                  </td>
+                </tr>
+              </div>
             </div>
           </table>
         </div>
       </b-collapse>
     </div>
-    <!--// map panel, controls -->
+    <!--// bar panel, controls -->
 
     <!-- base layers switch -->
     <div class="base-layers-panel">
@@ -260,7 +262,9 @@
 
 <script>
   import { camelCase } from 'lodash'
-  import { createProj, addProj, findPointOnSurface, createStyle } from 'vuelayers/lib/ol-ext'
+  import { createProj, addProj, findPointOnSurface, writeGeoJsonFeature } from 'vuelayers/lib/ol-ext'
+  // import { createProj, addProj, findPointOnSurface } from 'vuelayers/lib/ol-ext'
+  // , createStyle
   import ScaleLine from 'ol/control/ScaleLine'
   import FullScreen from 'ol/control/FullScreen'
   import OverviewMap from 'ol/control/OverviewMap'
@@ -268,6 +272,9 @@
   import { Style, Stroke, Fill, Circle } from 'ol/style'
   import { DEVICE_PIXEL_RATIO } from 'ol/has.js'
   import d3Barchart from '@/mixins/vue-d3-barchart'
+
+  import DragBox from 'ol/interaction/DragBox'
+  import { platformModifierKeyOnly } from 'ol/events/condition.js'
   
   // Custom projection for static Image layer
   let x = 1024 * 10000
@@ -282,7 +289,7 @@
   // after that it can be used by code
   addProj(customProj)
 
-  const easeInOut = t => 1 - Math.pow(1 - t, 3)
+  // const easeInOut = t => 1 - Math.pow(1 - t, 3)
 
   export default {
     name: 'nycPowerlines',
@@ -300,13 +307,18 @@
         concentrat: undefined,
         timestamp: undefined,
         selectedFeatures: [],
+        selectedFeaturesBarClick: [],
+        isBox: undefined,
         deviceCoordinate: undefined,
         mapPanel: {
           tab: 'layers',
         },
+        barPanel: {
+          tab: 'bar',
+        },
         panelOpen: true,
+        barpanelOpen: true,
         mapVisible: true,
-        vtSelection: [],
         baroptions: {
           colors: ['blue', 'lightgreen'],
           rules: true,
@@ -326,6 +338,10 @@
           },
           getY: (d) => {
             return d.y
+          },
+          autoSize: {
+            w: 200,
+            h: 150,
           },
         },
         baseLayers: [
@@ -439,38 +455,7 @@
       onUpdatePosition (coordinate) {
         this.deviceCoordinate = coordinate
       },
-      onMapPostCompose ({ vectorContext, frameState }) {
-        if (!this.$refs.marker || !this.$refs.marker.$feature) return
-
-        const feature = this.$refs.marker.$feature
-        if (!feature.getGeometry() || !feature.getStyle()) return
-
-        const flashGeom = feature.getGeometry().clone()
-        const duration = feature.get('duration')
-        const elapsed = frameState.time - feature.get('start')
-        const elapsedRatio = elapsed / duration
-        const radius = easeInOut(elapsedRatio) * 35 + 5
-        const opacity = easeInOut(1 - elapsedRatio)
-        const fillOpacity = easeInOut(0.5 - elapsedRatio)
-
-        vectorContext.setStyle(createStyle({
-          imageRadius: radius,
-          fillColor: [119, 170, 203, fillOpacity],
-          strokeColor: [119, 170, 203, opacity],
-          strokeWidth: 2 + opacity,
-        }))
-
-        vectorContext.drawGeometry(flashGeom)
-        vectorContext.setStyle(feature.getStyle()(feature)[0])
-        vectorContext.drawGeometry(feature.getGeometry())
-
-        if (elapsed > duration) {
-          feature.set('start', Date.now())
-        }
-
-        this.$refs.map.render()
-      },
-      onMapMounted () {
+      onMapMounted (map) {
         // now ol.Map instance is ready and we can work with it directly
         this.$refs.map.$map.getControls().extend([
           new ScaleLine(),
@@ -481,6 +466,36 @@
           }),
           new ZoomSlider(),
         ])
+
+        // a DragBox interaction used to select features by drawing boxes
+        const dragBox = new DragBox({
+          condition: platformModifierKeyOnly,
+        })
+
+        map.$map.addInteraction(dragBox)
+
+        dragBox.on('boxend', () => {
+          // features that intersect the box are added to the collection of
+          // selected features
+          const extent = dragBox.getGeometry().getExtent()
+          const source = this.$refs.layerSource[1].$source
+
+          this.selectedFeaturesBarClick = []
+          this.isBox = 'yes'
+
+          source.forEachFeatureIntersectingExtent(extent, feature => {
+            feature = writeGeoJsonFeature(feature)
+            this.selectedFeatures.push({ x: feature.properties['timestamp'], y: feature.properties['concentrat'] })
+            this.chem_id = feature.properties['chem_id']
+            this.pid = this.chem_id
+          })
+        })
+
+        // clear selection when drawing a new box and when clicking on the map
+        dragBox.on('boxstart', () => {
+          this.selectedFeatures = []
+          this.isBox = 'no'
+        })
       },
       // base layers
       showBaseLayer (name) {
@@ -511,7 +526,9 @@
         let features = this.$refs.map.$map.getFeaturesAtPixel(pixel)
 
         if (!features) {
-          this.vtSelection = []
+          this.selectedFeaturesBarClick = []
+          this.selectedFeatures = []
+          this.isBox = 'no'
         } else if (features) {
           this.deviceCoordinate = event.coordinate
           let feature = features[0]
@@ -522,13 +539,17 @@
             this.chem_id = this.pid
             this.concentrat = properties['concentrat']
             this.timestamp = properties['timestamp']
-            this.vtSelection.push({ x: this.timestamp, y: this.concentrat })
+            this.selectedFeaturesBarClick.push({ x: this.timestamp, y: this.concentrat })
+            // this.selectedFeatures = []
+            this.isBox = 'no'
           } else if (properties['powerline']) {
             this.pid = properties['powerline']
             this.powerline = this.pid
             this.concentrat = undefined
             this.timestamp = undefined
-            this.vtSelection = []
+            this.selectedFeaturesBarClick = []
+            // this.selectedFeatures = []
+            this.isBox = 'no'
           }
         }
       },
@@ -552,7 +573,7 @@
       height: 100%
       width: 100%
 
-    .map-panel
+    .menu-panel
       padding: 0
 
       .panel-heading
@@ -573,8 +594,32 @@
         position: absolute
         top: 0
         right: 0
-        max-height: 500px
+        max-height: 50px
         width: 22em
+
+    .bar-panel
+      padding: 0
+
+      .bar-panel-heading
+        box-shadow: 0 .25em .5em transparentize($dark, 0.8)
+
+      .bar-panel-content
+        background: $white
+        box-shadow: 0 .25em .5em transparentize($dark, 0.8)
+
+      .bar-panel-block
+        &.draw-panel
+          .buttons
+            .button
+              display: block
+              flex: 1 1 100%
+
+      +tablet()
+        position: absolute
+        top: 0
+        left: 0
+        max-height: 50px
+        width: 32em
 
     .base-layers-panel
       position: absolute
@@ -626,6 +671,6 @@
     display: inline-block
     width: 600px
     height: 200px
-    margin-top: 5em
+    margin-top: 0em
 
 </style>

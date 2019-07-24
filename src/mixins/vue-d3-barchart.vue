@@ -40,8 +40,8 @@
     <line class="line" :x1="lineX" :x2="lineX" :y1="0" :y2="h - margin"></line>
   </g>
   <g class="chart-tip" v-if="opts.tip &amp;&amp; over">
-    <rect class="chart-tip-back" v-if="opts.tipBack" :x="lineX + fontSize/2" :y="0" :width="labelW + &quot;ex&quot;" :height="label.length + .25 + &quot;em&quot;" :rx="labelW / 5" :ry="label.length" @touchstart="barClick(over)"></rect>
-    <text class="label" :x="lineX + fontSize" y="0" :font-size="fontSize">
+    <rect class="chart-tip-back" v-if="opts.tipBack" :x="lineX + fontSize/2" :y="10" :width="labelW + &quot;ex&quot;" :height="label.length + .25 + &quot;em&quot;" :rx="labelW / 5" :ry="label.length" @touchstart="barClick(over)"></rect>
+    <text class="label" :x="lineX + fontSize" y="10" :font-size="fontSize">
       <tspan class="bar-text" v-for="line,index in label" :key="index" :x="lineX + fontSize" dy="1.2em" :class="line.css" :style="line.style">{{line.txt}}</tspan>
     </text>
   </g>
@@ -101,8 +101,8 @@ export default {
   },
   data () {
     return {
-      w: 400,
-      h: 250,
+      w: 200,
+      h: 150,
       colorInterpol: null,
       mouseX: 30,
       mouseOffset: {
@@ -151,7 +151,7 @@ export default {
       return d3.scaleBand()
         .domain(d3.range(this.mappedData.length))
         .paddingInner(this.opts.padding)
-        .rangeRound([0, this.ww])
+        .rangeRound([0, this.ww / 1.3]) // added division by 1.3 to make room for tooltip
     },
     scaleY () {
       return d3.scaleLinear()
