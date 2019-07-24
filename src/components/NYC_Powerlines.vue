@@ -212,8 +212,7 @@
           </div>
         </div>
 
-        <!-- <div class="bar-panel-block" v-show="barPanel.tab === 'plot'"> -->
-        <div class="bar-panel-block">
+        <div class="panel-block">
           <table class="table is-fullwidth">
             <div v-if="pid == chem_id">
               <div v-if="Object.keys(selectedFeaturesBarClick).length > 0">
@@ -226,13 +225,13 @@
                   </td>
                 </tr>
               </div>
-              <div v-else-if="Object.keys(selectedFeatures).length > 0">
+              <div v-else-if="Object.keys(selectedFeaturesBarBox).length > 0">
                 <tr>
                   <th>{{ pid }} Concentration</th>
                 </tr>
                 <tr>
                   <td>
-                    <d3-barchart class="chart" :pdata='selectedFeatures' :options='baroptions' />
+                    <d3-barchart class="chart" :pdata='selectedFeaturesBarBox' :options='baroptions' />
                   </td>
                 </tr>
               </div>
@@ -261,36 +260,17 @@
 </template>
 
 <script>
-  import { camelCase } from 'lodash'
-  import { createProj, addProj, findPointOnSurface, writeGeoJsonFeature } from 'vuelayers/lib/ol-ext'
-  // import { createProj, addProj, findPointOnSurface } from 'vuelayers/lib/ol-ext'
-  // , createStyle
+  import { findPointOnSurface, writeGeoJsonFeature } from 'vuelayers/lib/ol-ext'
   import ScaleLine from 'ol/control/ScaleLine'
   import FullScreen from 'ol/control/FullScreen'
   import OverviewMap from 'ol/control/OverviewMap'
   import ZoomSlider from 'ol/control/ZoomSlider'
   import { Style, Stroke, Fill, Circle } from 'ol/style'
   import { DEVICE_PIXEL_RATIO } from 'ol/has.js'
-  import d3Barchart from '@/mixins/vue-d3-barchart'
-
   import DragBox from 'ol/interaction/DragBox'
   import { platformModifierKeyOnly } from 'ol/events/condition.js'
+  import d3Barchart from '@/mixins/vue-d3-barchart'
   
-  // Custom projection for static Image layer
-  let x = 1024 * 10000
-  let y = 968 * 10000
-  let imageExtent = [-x / 2, -y / 2, x / 2, y / 2]
-  let customProj = createProj({
-    code: 'xkcd-image',
-    units: 'pixels',
-    extent: imageExtent,
-  })
-  // add to the list of known projections
-  // after that it can be used by code
-  addProj(customProj)
-
-  // const easeInOut = t => 1 - Math.pow(1 - t, 3)
-
   export default {
     name: 'nycPowerlines',
     components: {
@@ -308,13 +288,11 @@
         timestamp: undefined,
         selectedFeatures: [],
         selectedFeaturesBarClick: [],
+        selectedFeaturesBarBox: [],
         isBox: undefined,
         deviceCoordinate: undefined,
         mapPanel: {
           tab: 'layers',
-        },
-        barPanel: {
-          tab: 'bar',
         },
         panelOpen: true,
         barpanelOpen: true,
@@ -397,7 +375,6 @@
       }
     },
     methods: {
-      camelCase,
       pointOnSurface: findPointOnSurface,
       getNYC_PowerlinesStyle () {
         let canvas = document.createElement('canvas')
@@ -485,7 +462,8 @@
 
           source.forEachFeatureIntersectingExtent(extent, feature => {
             feature = writeGeoJsonFeature(feature)
-            this.selectedFeatures.push({ x: feature.properties['timestamp'], y: feature.properties['concentrat'] })
+            this.selectedFeatures.push(feature)
+            this.selectedFeaturesBarBox.push({ x: feature.properties['timestamp'], y: feature.properties['concentrat'] })
             this.chem_id = feature.properties['chem_id']
             this.pid = this.chem_id
           })
@@ -494,6 +472,7 @@
         // clear selection when drawing a new box and when clicking on the map
         dragBox.on('boxstart', () => {
           this.selectedFeatures = []
+          this.selectedFeaturesBarBox = []
           this.isBox = 'no'
         })
       },
@@ -527,6 +506,7 @@
 
         if (!features) {
           this.selectedFeaturesBarClick = []
+          this.selectedFeaturesBarBox = []
           this.selectedFeatures = []
           this.isBox = 'no'
         } else if (features) {
@@ -540,7 +520,7 @@
             this.concentrat = properties['concentrat']
             this.timestamp = properties['timestamp']
             this.selectedFeaturesBarClick.push({ x: this.timestamp, y: this.concentrat })
-            // this.selectedFeatures = []
+            this.selectedFeaturesBarBox = []
             this.isBox = 'no'
           } else if (properties['powerline']) {
             this.pid = properties['powerline']
@@ -548,7 +528,7 @@
             this.concentrat = undefined
             this.timestamp = undefined
             this.selectedFeaturesBarClick = []
-            // this.selectedFeatures = []
+            this.selectedFeaturesBarBox = []
             this.isBox = 'no'
           }
         }
@@ -600,14 +580,14 @@
     .bar-panel
       padding: 0
 
-      .bar-panel-heading
+      .panel-heading
         box-shadow: 0 .25em .5em transparentize($dark, 0.8)
 
-      .bar-panel-content
+      .panel-content
         background: $white
         box-shadow: 0 .25em .5em transparentize($dark, 0.8)
 
-      .bar-panel-block
+      .panel-block
         &.draw-panel
           .buttons
             .button

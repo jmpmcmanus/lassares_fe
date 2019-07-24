@@ -151,7 +151,7 @@ export default {
       return d3.scaleBand()
         .domain(d3.range(this.mappedData.length))
         .paddingInner(this.opts.padding)
-        .rangeRound([0, this.ww / 1.3]) // added division by 1.3 to make room for tooltip
+        .rangeRound([0, this.ww / 1.4]) // added division by 1.4 to make room for tooltip
     },
     scaleY () {
       return d3.scaleLinear()
