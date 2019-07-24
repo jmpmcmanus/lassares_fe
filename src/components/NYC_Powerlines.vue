@@ -428,10 +428,9 @@
           ]
         }
       },
-
-      onUpdatePosition (coordinate) {
+      /* onUpdatePosition (coordinate) {
         this.deviceCoordinate = coordinate
-      },
+      }, */
       onMapMounted (map) {
         // now ol.Map instance is ready and we can work with it directly
         this.$refs.map.$map.getControls().extend([
@@ -455,7 +454,15 @@
           // features that intersect the box are added to the collection of
           // selected features
           const extent = dragBox.getGeometry().getExtent()
-          const source = this.$refs.layerSource[1].$source
+          // only use source that have chem_id
+          let source
+          var i
+          for (i = 0; i < this.$refs.layerSource.length; i++) {
+            let key = Object.keys(this.$refs.layerSource[i].$source.featuresRtree_.items_)[0]
+            if (this.$refs.layerSource[i].$source.featuresRtree_.items_[key].value.values_.chem_id) {
+              source = this.$refs.layerSource[i].$source
+            }
+          }
 
           this.selectedFeaturesBarClick = []
           this.isBox = 'yes'
