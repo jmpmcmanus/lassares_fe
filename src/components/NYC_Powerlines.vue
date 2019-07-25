@@ -1,15 +1,15 @@
 <template xmlns:>
   <div id="app" :class="[$options.name]">
-    <!-- app map -->
+    <!--// app map -->
     <vl-map v-if="mapVisible" class="map" ref="map" :load-tiles-while-animating="true" :load-tiles-while-interacting="true"
             @click="onMapClick" data-projection="EPSG:4326" @mounted="onMapMounted">
-       <!-- map view aka ol.View -->
+       <!--// map view aka ol.View -->
       <vl-view ref="mapView" :center.sync="center" :zoom.sync="zoom" :rotation.sync="rotation"></vl-view>
 
-      <!-- click interactions -->
+      <!--// click interactions -->
       <vl-interaction-select ref="selectInteraction" :features.sync="selectedFeatures">
         <template slot-scope="select">
-          <!-- select styles -->
+          <!--// select styles -->
           <vl-style-box>
             <vl-style-stroke color="#33201e" :width="7"></vl-style-stroke>
             <vl-style-fill :color="[254, 178, 76, 0.7]"></vl-style-fill>
@@ -26,7 +26,7 @@
           </vl-style-box>
           <!--// select styles -->
 
-          <!-- selected feature popup -->
+          <!--// selected feature popup -->
           <div v-if="isBox === 'no'">
             <vl-overlay class="feature-popup" v-for="feature in select.features" :key="feature.id" :id="feature.id"
                         :position="pointOnSurface(feature.geometry)" :auto-pan="true" :auto-pan-animation="{ duration: 300 }">
@@ -73,20 +73,20 @@
       </vl-interaction-select>
       <!--// click interactions -->
 
-      <!-- base layers -->
+      <!--// base layers -->
       <vl-layer-tile v-for="layer in baseLayers" :key="layer.name" :id="layer.name" :visible="layer.visible">
         <component :is="'vl-source-' + layer.name" v-bind="layer"></component>
       </vl-layer-tile>
       <!--// base layers -->
 
-      <!-- other layers from config -->
+      <!--// other layers from config -->
       <component v-for="layer in layers" :is="layer.cmp" v-if="layer.visible" :key="layer.id" v-bind="layer">
-        <!-- add vl-source-* -->
+        <!--// add vl-source-* -->
         <component ref="layerSource" :is="layer.source.cmp" v-bind="layer.source">
         </component>
 
-        <!-- add style components if provided -->
-        <!-- create vl-style-box or vl-style-func -->
+        <!--// add style components if provided -->
+        <!--// create vl-style-box or vl-style-func -->
         <component v-if="layer.style" v-for="(style, i) in layer.style" :key="i" :is="style.cmp" v-bind="style">
         </component>
         <!--// style -->
@@ -96,7 +96,7 @@
     </vl-map>
     <!--// app map -->
 
-    <!-- menu panel, controls -->
+    <!--// menu panel, controls -->
     <div class="menu-panel">
       <b-collapse class="panel box is-paddingless" :open.sync="panelOpen">
         <div slot="trigger" class="panel-heading">
@@ -158,7 +158,6 @@
                 <div class="content">
                   <table class="table is-fullwidth">
                     <tr>
-                      <!--// style="background-color: hsla(0, 0%, 2%, 1)" &nbsp; -->
                       <td><hr style="border-top: 3px dashed black"/></td>
                       <td>Powerlines</td>
                     </tr>
@@ -179,7 +178,6 @@
                 <div class="content">
                   <table class="table is-fullwidth">
                     <tr>
-                      <!--// style="background-color: hsla(0, 0%, 2%, 1)" &nbsp; -->
                       <td><span class="dot"></span></td>
                       <td>Test Measurments</td>
                     </tr>
@@ -198,7 +196,7 @@
     </div>
     <!--// menu panel, controls -->
 
-    <!-- bar panel, controls -->
+    <!--// bar panel, controls -->
     <div class="bar-panel">
       <b-collapse class="panel box is-paddingless" :open.sync="barpanelOpen">
         <div slot="trigger" class="panel-heading">
@@ -242,7 +240,7 @@
     </div>
     <!--// bar panel, controls -->
 
-    <!-- base layers switch -->
+    <!--// base layers switch -->
     <div class="base-layers-panel">
       <div class="buttons has-addons">
         <button class="button is-light" v-for="layer in baseLayers"
@@ -430,9 +428,6 @@
           ]
         }
       },
-      /* onUpdatePosition (coordinate) {
-        this.deviceCoordinate = coordinate
-      }, */
       onMapMounted (map) {
         // now ol.Map instance is ready and we can work with it directly
         this.$refs.map.$map.getControls().extend([
