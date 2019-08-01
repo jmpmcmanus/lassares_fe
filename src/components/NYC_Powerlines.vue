@@ -113,6 +113,7 @@
           <a @click="showMapPanelTab('layers')" :class="mapPanelTabClasses('layers')">Layers</a>
           <a @click="showMapPanelTab('state')" :class="mapPanelTabClasses('state')">State</a>
           <a @click="showMapPanelTab('legend')" :class="mapPanelTabClasses('legend')">Legend</a>
+          <a @click="showMapPanelTab('filter-date')" :class="mapPanelTabClasses('filter-date')">Filter-Date</a>
         </p>
 
         <div class="panel-block" v-for="layer in layers" :key="layer.id" @click="showMapPanelLayer"
@@ -189,6 +190,32 @@
                   </table>
                 </div>
               </b-collapse>
+            </tr>
+          </table>
+        </div>
+
+        <div class="panel-block" v-show="mapPanel.tab === 'filter-date'">
+          <table class="table is-fullwidth">
+            <tr>
+              <th>Select Start Timestamp</th>
+            </tr>
+            <tr>
+              <td>
+                <treeselect :load-options="loadOptions" :options="options" v-model="starttimestamp" :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />                  
+              </td>
+            </tr>
+            <tr>
+              <th>Select End Timestamp</th>
+            </tr>
+            <tr>
+              <td>
+                <treeselect :load-options="loadOptions" :options="options" v-model="endtimestamp" :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <b-button @click="selectTimeRange">Select Time Range</b-button>
+              </td>
             </tr>
           </table>
         </div>
@@ -269,22 +296,47 @@
   import DragBox from 'ol/interaction/DragBox'
   import { platformModifierKeyOnly } from 'ol/events/condition.js'
   import d3Barchart from '@/mixins/vue-d3-barchart'
-  
+  import { Treeselect, LOAD_ROOT_OPTIONS } from '@riophae/vue-treeselect'
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+
+  let concentrat2color = function (concentrat) {
+    let r = 0
+    let g = 0
+    let b = 0
+    if (concentrat < 50) {
+      g = 255
+      b = Math.round(5.1 * concentrat)
+    } else {
+      b = 255
+      g = Math.round(510 - 5.10 * concentrat)
+    }
+    let h = r * 0x1 + g * 0x100 + b * 0x10000
+    return '#' + ('000000' + h.toString(16)).slice(-6)
+  }
+
+  const sleep = d => new Promise(resolve => setTimeout(resolve, d))
+  // let called = false
+
   export default {
     name: 'nycPowerlines',
     components: {
       d3Barchart,
+      Treeselect,
     },
     data () {
       return {
         center: [-73.851271, 40.725070],
         zoom: 15,
         rotation: 0,
+        starttimestamp: null,
+        endtimestamp: null,
+        options: null,
         pid: undefined,
         chem_id: undefined,
         powerline: undefined,
         concentrat: undefined,
         timestamp: undefined,
+        storeFeatures: [],
         selectedFeatures: [],
         selectedFeaturesBarClick: [],
         selectedFeaturesBarBox: [],
@@ -297,7 +349,7 @@
         barpanelOpen: true,
         mapVisible: true,
         baroptions: {
-          colors: ['blue', 'lightgreen'],
+          colors: ['red', 'lightgreen'],
           rules: true,
           axis: true,
           labels: true,
@@ -417,10 +469,10 @@
           return [
             new Style({
               image: new Circle({
-                radius: (this.zoom / 2.6) + feature.get('concentrat'),
-                fill: new Fill({ color: 'rgba(245, 111, 66,0.7)' }),
+                radius: (this.zoom / 2.6) + (feature.get('concentrat') / 2),
+                fill: new Fill({ color: concentrat2color(feature.get('concentrat') * 4.54) }), // 'rgba(245, 111, 66, 0.7)'
                 stroke: new Stroke({
-                  color: 'rgba(245, 111, 66,0.7)',
+                  color: 'rgb(145, 7, 4, 1)',
                   width: 1,
                 }),
               }),
@@ -453,10 +505,10 @@
           const extent = dragBox.getGeometry().getExtent()
           // only use source that have chem_id
           let source
-          var i
+          let i
           for (i = 0; i < this.$refs.layerSource.length; i++) {
-            let key = Object.keys(this.$refs.layerSource[i].$source.featuresRtree_.items_)[0]
-            if (this.$refs.layerSource[i].$source.featuresRtree_.items_[key].value.values_.chem_id) {
+            let features = this.$refs.layerSource[i].getFeatures()
+            if (features[0].values_.chem_id) {
               source = this.$refs.layerSource[i].$source
             }
           }
@@ -534,6 +586,69 @@
             this.selectedFeaturesBarClick = []
             this.selectedFeaturesBarBox = []
             this.isBox = 'no'
+          }
+        }
+      },
+      getTimestamps () {
+        let startTimestamps = []
+        let i
+        let j
+        for (i = 0; i < this.$refs.layerSource.length; i++) {
+          let features = this.$refs.layerSource[i].getFeatures()
+          if (features[0].values_.chem_id) {
+            for (j = 0; j < features.length; j++) {
+              let timestamp = features[j].values_.timestamp
+              startTimestamps.push(timestamp)
+            }
+          }
+        }
+        return startTimestamps
+      },
+      // You can either use callback or return a Promise.
+      async loadOptions ({ action }) {
+        if (action === LOAD_ROOT_OPTIONS) {
+          // if (!called) {
+          // First try: simulate an exception.
+          /*  await sleep(2000) // Simulate an async operation.
+            called = true
+            throw new Error('Failed to load options: ')
+          } else { */
+          // Second try: simulate a successful loading.
+          await sleep(2000)
+          this.options = this.getTimestamps().map(id => ({ id, label: `${id}` }))
+          // }
+        }
+      },
+      selectTimeRange () {
+        if (!this.starttimestamp) {
+          this.$notification.open('Your need to select a start timestep')
+        } else if (!this.endtimestamp) {
+          this.$notification.open('Your need to select a end timestep')
+        } else if (this.endtimestamp < this.starttimestamp) {
+          this.$notification.open('You have to pick end timestep later than the start timestamp')
+        } else {
+          // this.layers[1].source.url = 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gt=' + this.starttimestamp + '&timestamp__lt=' + this.endtimestamp
+          // console.log(this.$refs.map.$map.getLayers())
+
+          // this.$refs.layerSource[1].url = 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gte=' + this.starttimestamp + '&timestamp__lte=' + this.endtimestamp
+          let i
+          if (this.storeFeatures.length > 0) {
+            for (i = 0; i < this.storeFeatures.length; i++) {
+              this.$refs.layerSource[1].addFeature(this.storeFeatures[i])
+            }
+            this.storeFeatures = []
+          }
+          let features = this.$refs.layerSource[1].getFeatures()
+          for (i = 0; i < features.length; i++) {
+            let id = features[i].id_
+            let feature = this.$refs.layerSource[1].getFeatureById(id)
+            if (feature.values_.timestamp < this.starttimestamp) {
+              this.$refs.layerSource[1].removeFeature(feature)
+              this.storeFeatures.push(feature)
+            } else if (feature.values_.timestamp > this.endtimestamp) {
+              this.$refs.layerSource[1].removeFeature(feature)
+              this.storeFeatures.push(feature)
+            }
           }
         }
       },
