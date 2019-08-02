@@ -113,12 +113,13 @@
           <a @click="showMapPanelTab('layers')" :class="mapPanelTabClasses('layers')">Layers</a>
           <a @click="showMapPanelTab('state')" :class="mapPanelTabClasses('state')">State</a>
           <a @click="showMapPanelTab('legend')" :class="mapPanelTabClasses('legend')">Legend</a>
-          <a @click="showMapPanelTab('filter-date')" :class="mapPanelTabClasses('filter-date')">Filter-Date</a>
+          <a @click="showMapPanelTab('filter')" :class="mapPanelTabClasses('filter')">Filter</a>
         </p>
 
-        <div class="panel-block" v-for="layer in layers" :key="layer.id" @click="showMapPanelLayer"
-             :class="{ 'is-active': layer.visible }"
-             v-show="mapPanel.tab === 'layers'">
+        <!-- <div class="panel-block" v-for="layer in layers" :key="layer.id" @click="showMapPanelLayer" 
+          :class="{ 'is-active': layer.visible }" v-show="mapPanel.tab === 'layers'"> -->
+        <div class="panel-block" v-for="layer in layers"  :key="layer.id" @click="showMapPanelLayer"
+          :class="{ 'is-active': layer.visible }" v-show="mapPanel.tab === 'layers'">
           <b-switch :key="layer.id" v-model="layer.visible">
             {{ layer.title }}
           </b-switch>
@@ -194,14 +195,15 @@
           </table>
         </div>
 
-        <div class="panel-block" v-show="mapPanel.tab === 'filter-date'">
+        <div class="panel-block" v-show="mapPanel.tab === 'filter'">
           <table class="table is-fullwidth">
             <tr>
               <th>Select Start Timestamp</th>
             </tr>
             <tr>
               <td>
-                <treeselect :load-options="loadOptions" :options="options" v-model="starttimestamp" :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />                  
+                <treeselect :load-options="loadTimestampOptions" :options="toptions" v-model="starttimestamp" 
+                  :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />                  
               </td>
             </tr>
             <tr>
@@ -209,12 +211,22 @@
             </tr>
             <tr>
               <td>
-                <treeselect :load-options="loadOptions" :options="options" v-model="endtimestamp" :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />
+                <treeselect :load-options="loadTimestampOptions" :options="toptions" v-model="endtimestamp" 
+                  :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />
+              </td>
+            </tr>
+            <tr>
+              <th>Select Job ID</th>
+            </tr>
+            <tr>
+              <td>
+                <treeselect :load-options="loadJobIdOptions" :options="joptions" v-model="jobids" 
+                  :auto-load-root-options="false" :multiple="true" placeholder="Open the menu..." />
               </td>
             </tr>
             <tr>
               <td>
-                <b-button @click="selectTimeRange">Select Time Range</b-button>
+                <b-button @click="filterMeasurements">Filter Measurements</b-button>
               </td>
             </tr>
           </table>
@@ -298,7 +310,9 @@
   import d3Barchart from '@/mixins/vue-d3-barchart'
   import { Treeselect, LOAD_ROOT_OPTIONS } from '@riophae/vue-treeselect'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+  import axios from 'axios'
 
+  // color values for measurement concentrations
   let concentrat2color = function (concentrat) {
     let r = 0
     let g = 0
@@ -314,8 +328,13 @@
     return '#' + ('000000' + h.toString(16)).slice(-6)
   }
 
+  // sleepy time for treeselections
   const sleep = d => new Promise(resolve => setTimeout(resolve, d))
-  // let called = false
+
+  // unique for job ids
+  const unique = (value, index, self) => {
+    return self.indexOf(value) === index
+  }
 
   export default {
     name: 'nycPowerlines',
@@ -328,9 +347,11 @@
         center: [-73.851271, 40.725070],
         zoom: 15,
         rotation: 0,
-        starttimestamp: null,
-        endtimestamp: null,
-        options: null,
+        starttimestamp: undefined,
+        endtimestamp: undefined,
+        toptions: null,
+        jobids: undefined,
+        joptions: null,
         pid: undefined,
         chem_id: undefined,
         powerline: undefined,
@@ -413,7 +434,7 @@
             visible: true,
             source: {
               cmp: 'vl-source-vector',
-              url: 'http://localhost:8000/api/testdata_Model/?format=json',
+              url: this.Test_MeasurementsURL('2019-05-12T00:00:00', '2019-06-20T17:43:30'), // 'http://localhost:8000/api/testdata_Model/?format=json',
             },
             style: [
               {
@@ -463,6 +484,9 @@
             }),
           ]
         }
+      },
+      Test_MeasurementsURL (starttimestamp, endtimestamp) {
+        return 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gt=' + starttimestamp + '&timestamp__lt=' + endtimestamp
       },
       Test_MeasurementsStyle () {
         return feature => {
@@ -602,10 +626,10 @@
             }
           }
         }
-        return startTimestamps
+        return startTimestamps.sort()
       },
       // You can either use callback or return a Promise.
-      async loadOptions ({ action }) {
+      async loadTimestampOptions ({ action }) {
         if (action === LOAD_ROOT_OPTIONS) {
           // if (!called) {
           // First try: simulate an exception.
@@ -615,39 +639,96 @@
           } else { */
           // Second try: simulate a successful loading.
           await sleep(2000)
-          this.options = this.getTimestamps().map(id => ({ id, label: `${id}` }))
+          this.toptions = this.getTimestamps().map(id => ({ id, label: `${id}` }))
           // }
         }
       },
-      selectTimeRange () {
-        if (!this.starttimestamp) {
-          this.$notification.open('Your need to select a start timestep')
-        } else if (!this.endtimestamp) {
-          this.$notification.open('Your need to select a end timestep')
-        } else if (this.endtimestamp < this.starttimestamp) {
-          this.$notification.open('You have to pick end timestep later than the start timestamp')
-        } else {
-          // this.layers[1].source.url = 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gt=' + this.starttimestamp + '&timestamp__lt=' + this.endtimestamp
-          // console.log(this.$refs.map.$map.getLayers())
-
-          // this.$refs.layerSource[1].url = 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gte=' + this.starttimestamp + '&timestamp__lte=' + this.endtimestamp
-          let i
-          if (this.storeFeatures.length > 0) {
-            for (i = 0; i < this.storeFeatures.length; i++) {
-              this.$refs.layerSource[1].addFeature(this.storeFeatures[i])
+      getJobIds () {
+        let startJobIds = []
+        let i
+        let j
+        for (i = 0; i < this.$refs.layerSource.length; i++) {
+          let features = this.$refs.layerSource[i].getFeatures()
+          if (features[0].values_.chem_id) {
+            for (j = 0; j < features.length; j++) {
+              let jobid = features[j].values_.job_id
+              startJobIds.push(jobid)
             }
-            this.storeFeatures = []
           }
-          let features = this.$refs.layerSource[1].getFeatures()
-          for (i = 0; i < features.length; i++) {
-            let id = features[i].id_
-            let feature = this.$refs.layerSource[1].getFeatureById(id)
-            if (feature.values_.timestamp < this.starttimestamp) {
-              this.$refs.layerSource[1].removeFeature(feature)
-              this.storeFeatures.push(feature)
-            } else if (feature.values_.timestamp > this.endtimestamp) {
-              this.$refs.layerSource[1].removeFeature(feature)
-              this.storeFeatures.push(feature)
+        }
+        return startJobIds.filter(unique).sort()
+      },
+      async loadJobIdOptions ({ action }) {
+        if (action === LOAD_ROOT_OPTIONS) {
+          // if (!called) {
+          // First try: simulate an exception.
+          /*  await sleep(2000) // Simulate an async operation.
+            called = true
+            throw new Error('Failed to load options: ')
+          } else { */
+          // Second try: simulate a successful loading.
+          await sleep(2000)
+          this.joptions = this.getJobIds().map(id => ({ id, label: `${id}` }))
+          // }
+        }
+      },
+      searchMeasurements () {
+        if (this.starttimestamp && this.endtimestamp) {
+          if (this.endtimestamp < this.starttimestamp) {
+            this.$notification.open('You have to pick end timestep later than the start timestamp')
+          } else {
+            let url = 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gte=' + this.starttimestamp + '&timestamp__lte=' + this.endtimestamp
+            this.layers[1].source.url = url
+            let features = this.$refs.layerSource[1].getFeatures()
+            this.$refs.layerSource[1].removeFeatures(features)
+            var that = this
+            axios.get(url)
+              .then(function (response) {
+                that.$refs.layerSource[1].addFeatures(response.data.features)
+              })
+              .catch(function (error) {
+                console.log(error)
+              })
+          }
+        }
+      },
+      filterMeasurements () {
+        // check to see if there are stored features, and if there are then add them
+        // to the layerSource features,so all features are available for filtering.
+        let i
+        if (this.storeFeatures.length > 0) {
+          for (i = 0; i < this.storeFeatures.length; i++) {
+            let j
+            for (j = 0; j < this.$refs.layerSource.length; j++) {
+              let features = this.$refs.layerSource[j].getFeatures()
+              if (features[0].values_.chem_id) {
+                this.$refs.layerSource[j].addFeature(this.storeFeatures[i])
+              }
+            }
+          }
+          this.storeFeatures = []
+        }
+        // if there are two timestamps, and if they are in order than filter
+        if (this.starttimestamp && this.endtimestamp) {
+          if (this.endtimestamp < this.starttimestamp) {
+            this.$notification.open('You have to pick end timestep later than the start timestamp')
+          } else {
+            for (i = 0; i < this.$refs.layerSource.length; i++) {
+              let features = this.$refs.layerSource[i].getFeatures()
+              if (features[0].values_.chem_id) {
+                let j
+                for (j = 0; j < features.length; j++) {
+                  let id = features[j].id_
+                  let feature = this.$refs.layerSource[i].getFeatureById(id)
+                  if (feature.values_.timestamp < this.starttimestamp) {
+                    this.$refs.layerSource[i].removeFeature(feature)
+                    this.storeFeatures.push(feature)
+                  } else if (feature.values_.timestamp > this.endtimestamp) {
+                    this.$refs.layerSource[i].removeFeature(feature)
+                    this.storeFeatures.push(feature)
+                  }
+                }
+              }
             }
           }
         }
