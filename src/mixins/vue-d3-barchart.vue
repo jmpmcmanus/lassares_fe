@@ -40,8 +40,8 @@
     <line class="line" :x1="lineX" :x2="lineX" :y1="0" :y2="h - margin"></line>
   </g>
   <g class="chart-tip" v-if="opts.tip &amp;&amp; over">
-    <rect class="chart-tip-back" v-if="opts.tipBack" :x="lineX + fontSize/2" :y="10" :width="labelW + &quot;ex&quot;" :height="label.length + .25 + &quot;em&quot;" :rx="labelW / 5" :ry="label.length" @touchstart="barClick(over)"></rect>
-    <text class="label" :x="lineX + fontSize" y="10" :font-size="fontSize">
+    <rect class="chart-tip-back" v-if="opts.tipBack" :x="lineX + fontSize/2" :y="16" :width="labelW + &quot;ex&quot;" :height="label.length + .25 + &quot;em&quot;" :rx="labelW / 5" :ry="label.length" @touchstart="barClick(over)"></rect>
+    <text class="label" :x="lineX + fontSize" y="14" :font-size="fontSize">
       <tspan class="bar-text" v-for="line,index in label" :key="index" :x="lineX + fontSize" dy="1.2em" :class="line.css" :style="line.style">{{line.txt}}</tspan>
     </text>
   </g>
@@ -79,7 +79,7 @@ const defaultOptions = {
     gradient: false,
   },
   tip: true,
-  fontSize: 10,
+  fontSize: 14,
   tipBack: true,
   autoSize: {
     w: 180,
@@ -525,7 +525,7 @@ export default {
 
 .bar-text
   fill: #fa0505
-  font-size: 10px
+  font-size: 14px
 
 .rulers
   stroke-width: 1px
@@ -560,6 +560,7 @@ export default {
 
 .chart-tip-back
   fill: #000
+  width: 180px
   stroke-width: 1px
   stroke: #808080
   opacity: 0.5

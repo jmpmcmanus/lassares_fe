@@ -217,15 +217,6 @@
               </td>
             </tr>
             <tr>
-              <th>Select Job ID</th>
-            </tr>
-            <tr>
-              <td>
-                <treeselect :load-options="loadFilterOptions" :options="joptions" v-model="jobids" 
-                  :auto-load-root-options="false" :multiple="true" placeholder="Open the menu..." />
-              </td>
-            </tr>
-            <tr>
               <td>
                 <b-button @click="filterMeasurements">Filter Measurements</b-button>
               </td>
@@ -290,19 +281,12 @@
         <div class="panel-block">
           <table class="table is-fullwidth">
             <div v-if="pid == chem_id">
-              <div v-if="Object.keys(selectedFeaturesBarClick).length > 0">
+              <div v-if="Object.keys(selectedFeaturesBarBox).length > 0">
                 <tr>
                   <th>{{ pid }} Concentration</th>
                 </tr>
                 <tr>
-                  <td>
-                    <d3-barchart class="chart" :pdata='selectedFeaturesBarClick' :options='baroptions' />
-                  </td>
-                </tr>
-              </div>
-              <div v-else-if="Object.keys(selectedFeaturesBarBox).length > 0">
-                <tr>
-                  <th>{{ pid }} Concentration</th>
+                  <td>x = Timestamp, y = Concentration</td>
                 </tr>
                 <tr>
                   <td>
@@ -846,6 +830,32 @@
       height: 100%
       width: 100%
 
+    .map .ol-zoom
+      top: 5.5em
+      left: 1.5em
+
+    .map .ol-zoomslider
+      background-color: transparent
+      top: 7.3em
+      left: 1.5em
+
+    .map .ol-zoom .ol-zoom-out
+      margin-top: 204px
+
+    .map .ol-touch .ol-zoom .ol-zoom-out
+      margin-top: 212px
+
+    .map .ol-touch .ol-zoomslider
+      top: 2.75em
+
+    .map .ol-zoom-in.ol-has-tooltip:hover [role=tooltip],
+    .map .ol-zoom-in.ol-has-tooltip:focus [role=tooltip]
+      top: 3px
+
+    .map .ol-zoom-out.ol-has-tooltip:hover [role=tooltip],
+    .map .ol-zoom-out.ol-has-tooltip:focus [role=tooltip]
+      top: 232px
+
     .menu-panel
       padding: 0
 
@@ -892,7 +902,7 @@
         top: 0
         left: 0
         max-height: 50px
-        width: 32em
+        width: 38em
 
     .base-layers-panel
       position: absolute
@@ -942,7 +952,7 @@
 
   .chart
     display: inline-block
-    width: 600px
+    width: 700px
     height: 200px
     margin-top: 0em
 
