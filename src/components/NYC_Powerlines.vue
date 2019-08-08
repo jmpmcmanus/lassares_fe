@@ -114,11 +114,12 @@
           <a @click="showMapPanelTab('state')" :class="mapPanelTabClasses('state')">State</a>
           <a @click="showMapPanelTab('legend')" :class="mapPanelTabClasses('legend')">Legend</a>
           <a @click="showMapPanelTab('filter')" :class="mapPanelTabClasses('filter')">Filter</a>
+          <a @click="showMapPanelTab('search')" :class="mapPanelTabClasses('search')">Search</a>
         </p>
 
         <!-- <div class="panel-block" v-for="layer in layers" :key="layer.id" @click="showMapPanelLayer" 
           :class="{ 'is-active': layer.visible }" v-show="mapPanel.tab === 'layers'"> -->
-        <div class="panel-block" v-for="layer in layers"  :key="layer.id" @click="showMapPanelLayer"
+        <div class="panel-block" v-for="layer in layers"  :key="layer.id" @click="showMapPanelLayer(layer)"
           :class="{ 'is-active': layer.visible }" v-show="mapPanel.tab === 'layers'">
           <b-switch :key="layer.id" v-model="layer.visible">
             {{ layer.title }}
@@ -160,7 +161,7 @@
                 <div class="content">
                   <table class="table is-fullwidth">
                     <tr>
-                      <td><hr style="border-top: 3px dashed black"/></td>
+                      <td><hr style=getNYC_PowerlinesStyle() /></td>
                       <td>Powerlines</td>
                     </tr>
                     <tr>
@@ -202,7 +203,7 @@
             </tr>
             <tr>
               <td>
-                <treeselect :load-options="loadTimestampOptions" :options="toptions" v-model="starttimestamp" 
+                <treeselect :load-options="loadFilterOptions" :options="toptions" v-model="starttimestamp" 
                   :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />                  
               </td>
             </tr>
@@ -211,7 +212,7 @@
             </tr>
             <tr>
               <td>
-                <treeselect :load-options="loadTimestampOptions" :options="toptions" v-model="endtimestamp" 
+                <treeselect :load-options="loadFilterOptions" :options="toptions" v-model="endtimestamp" 
                   :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />
               </td>
             </tr>
@@ -220,13 +221,50 @@
             </tr>
             <tr>
               <td>
-                <treeselect :load-options="loadJobIdOptions" :options="joptions" v-model="jobids" 
+                <treeselect :load-options="loadFilterOptions" :options="joptions" v-model="jobids" 
                   :auto-load-root-options="false" :multiple="true" placeholder="Open the menu..." />
               </td>
             </tr>
             <tr>
               <td>
                 <b-button @click="filterMeasurements">Filter Measurements</b-button>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="panel-block" v-show="mapPanel.tab === 'search'">
+          <table class="table is-fullwidth">
+            <tr>
+              <th>Select Start Timestamp</th>
+            </tr>
+            <tr>
+              <td>
+                <treeselect :options="searchtoptions" v-model="starttimestampx" 
+                  :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />                  
+              </td>
+            </tr>
+            <tr>
+              <th>Select End Timestamp</th>
+            </tr>
+            <tr>
+              <td>
+                <treeselect :options="searchtoptions" v-model="endtimestampx" 
+                  :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />
+              </td>
+            </tr>
+            <tr>
+              <th>Select Job ID</th>
+            </tr>
+            <tr>
+              <td>
+                <treeselect :options="searchjoptions" v-model="jobidsx" 
+                  :auto-load-root-options="false" :multiple="false" placeholder="Open the menu..." />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <b-button @click="searchMeasurements">Search Measurements</b-button>
               </td>
             </tr>
           </table>
@@ -309,6 +347,7 @@
   import { platformModifierKeyOnly } from 'ol/events/condition.js'
   import d3Barchart from '@/mixins/vue-d3-barchart'
   import { Treeselect, LOAD_ROOT_OPTIONS } from '@riophae/vue-treeselect'
+  // import { Treeselect, ASYNC_SEARCH } from '@riophae/vue-treeselect'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import axios from 'axios'
 
@@ -328,6 +367,10 @@
     return '#' + ('000000' + h.toString(16)).slice(-6)
   }
 
+  // Async reload treeselections
+  /* const simulateAsyncOperation = fn => {
+    setTimeout(fn, 2000)
+  } */
   // sleepy time for treeselections
   const sleep = d => new Promise(resolve => setTimeout(resolve, d))
 
@@ -347,10 +390,32 @@
         center: [-73.851271, 40.725070],
         zoom: 15,
         rotation: 0,
+        searchtoptions: [
+          { id: '2019-05-12T19:20:10Z', label: '2019-05-12T19:20:10Z' },
+          { id: '2019-05-12T19:20:15Z', label: '2019-05-12T19:20:15Z' },
+          { id: '2019-05-12T19:20:20Z', label: '2019-05-12T19:20:20Z' },
+          { id: '2019-05-12T19:20:25Z', label: '2019-05-12T19:20:25Z' },
+          { id: '2019-05-12T19:20:30Z', label: '2019-05-12T19:20:30Z' },
+          { id: '2019-05-20T17:11:10Z', label: '2019-05-20T17:11:10Z' },
+          { id: '2019-05-20T17:14:15Z', label: '2019-05-20T17:14:15Z' },
+          { id: '2019-05-20T17:17:28Z', label: '2019-05-20T17:17:28Z' },
+          { id: '2019-05-20T17:21:25Z', label: '2019-05-20T17:21:25Z' },
+          { id: '2019-05-20T17:28:01Z', label: '2019-05-20T17:28:01Z' },
+          { id: '2019-05-20T17:35:30Z', label: '2019-05-20T17:35:30Z' },
+          { id: '2019-05-20T17:40:22Z', label: '2019-05-20T17:40:22Z' },
+          { id: '2019-05-20T17:43:30Z', label: '2019-05-20T17:43:30Z' },
+        ],
+        searchjoptions: [
+          { id: '1', label: '1' },
+          { id: '2', label: '2' },
+        ],
         starttimestamp: undefined,
         endtimestamp: undefined,
+        starttimestampx: undefined,
+        endtimestampx: undefined,
         toptions: null,
         jobids: undefined,
+        jobidsx: undefined,
         joptions: null,
         pid: undefined,
         chem_id: undefined,
@@ -485,9 +550,6 @@
           ]
         }
       },
-      Test_MeasurementsURL (starttimestamp, endtimestamp) {
-        return 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gt=' + starttimestamp + '&timestamp__lt=' + endtimestamp
-      },
       Test_MeasurementsStyle () {
         return feature => {
           return [
@@ -613,8 +675,9 @@
           }
         }
       },
-      getTimestamps () {
+      getFilterFields () {
         let startTimestamps = []
+        let startJobIds = []
         let i
         let j
         for (i = 0; i < this.$refs.layerSource.length; i++) {
@@ -623,75 +686,100 @@
             for (j = 0; j < features.length; j++) {
               let timestamp = features[j].values_.timestamp
               startTimestamps.push(timestamp)
-            }
-          }
-        }
-        return startTimestamps.sort()
-      },
-      // You can either use callback or return a Promise.
-      async loadTimestampOptions ({ action }) {
-        if (action === LOAD_ROOT_OPTIONS) {
-          // if (!called) {
-          // First try: simulate an exception.
-          /*  await sleep(2000) // Simulate an async operation.
-            called = true
-            throw new Error('Failed to load options: ')
-          } else { */
-          // Second try: simulate a successful loading.
-          await sleep(2000)
-          this.toptions = this.getTimestamps().map(id => ({ id, label: `${id}` }))
-          // }
-        }
-      },
-      getJobIds () {
-        let startJobIds = []
-        let i
-        let j
-        for (i = 0; i < this.$refs.layerSource.length; i++) {
-          let features = this.$refs.layerSource[i].getFeatures()
-          if (features[0].values_.chem_id) {
-            for (j = 0; j < features.length; j++) {
               let jobid = features[j].values_.job_id
               startJobIds.push(jobid)
             }
           }
         }
-        return startJobIds.filter(unique).sort()
+        return [startTimestamps.sort(), startJobIds.filter(unique).sort()]
       },
-      async loadJobIdOptions ({ action }) {
+      // You can either use callback or return a Promise.
+      async loadFilterOptions ({ action }) {
         if (action === LOAD_ROOT_OPTIONS) {
-          // if (!called) {
-          // First try: simulate an exception.
-          /*  await sleep(2000) // Simulate an async operation.
-            called = true
-            throw new Error('Failed to load options: ')
-          } else { */
-          // Second try: simulate a successful loading.
-          await sleep(2000)
-          this.joptions = this.getJobIds().map(id => ({ id, label: `${id}` }))
-          // }
+          await sleep(500)
+          this.toptions = this.getFilterFields()[0].map(id => ({ id, label: `${id}` }))
+          this.joptions = this.getFilterFields()[1].map(id => ({ id, label: `${id}` }))
         }
       },
-      searchMeasurements () {
-        if (this.starttimestamp && this.endtimestamp) {
-          if (this.endtimestamp < this.starttimestamp) {
-            this.$notification.open('You have to pick end timestep later than the start timestamp')
-          } else {
-            let url = 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gte=' + this.starttimestamp + '&timestamp__lte=' + this.endtimestamp
-            this.layers[1].source.url = url
-            let features = this.$refs.layerSource[1].getFeatures()
-            this.$refs.layerSource[1].removeFeatures(features)
-            var that = this
-            axios.get(url)
-              .then(function (response) {
-                that.$refs.layerSource[1].addFeatures(response.data.features)
-              })
-              .catch(function (error) {
-                console.log(error)
-              })
+      Test_MeasurementsURL (starttimestampx, endtimestampx, jobidsx) {
+        if (!jobidsx) {
+          return 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gte=' + starttimestampx + '&timestamp__lte=' + endtimestampx
+        } else if (jobidsx) {
+          if (starttimestampx) {
+            return 'http://localhost:8000/api/testdata_Model/?format=json&timestamp__gte=' + starttimestampx + '&timestamp__lte=' + endtimestampx + '&job_id=' + jobidsx
+          } else if (!starttimestampx) {
+            return 'http://localhost:8000/api/testdata_Model/?format=json&job_id=' + jobidsx
           }
         }
       },
+      searchMeasurements () {
+        if (this.starttimestampx && this.endtimestampx) {
+          if (this.endtimestampx < this.starttimestampx) {
+            this.$notification.open('You have to pick end timestep later than the start timestamp!')
+          } else {
+            let i
+            for (i = 0; i < this.$refs.layerSource.length; i++) {
+              let features = this.$refs.layerSource[i].getFeatures()
+              if (features[0].values_.chem_id) {
+                // url to get data from
+                let url = this.Test_MeasurementsURL(this.starttimestampx, this.endtimestampx, this.jobidsx)
+                // the that is used to deal with this scope
+                var that = this
+                // eye is used for i to deal with the async effects of axios
+                let eye = i
+                axios.get(url)
+                  .then(function (response) {
+                    if (response.data.features.length === 0) {
+                      that.$notification.open('You cannot delete all of the data. Make another type of selection')
+                    } else {
+                      that.layers[eye].source.url = url
+                      that.$refs.layerSource[eye].removeFeatures(features)
+                      that.$refs.layerSource[eye].addFeatures(response.data.features)
+                    }
+                  })
+                  .catch(function (error) {
+                    console.log(error)
+                  })
+              }
+            }
+            this.starttimestamp = undefined
+            this.endtimestamp = undefined
+            this.toptions = undefined
+            this.joptions = undefined
+            this.storeFeatures = []
+          }
+        } else if (this.starttimestampx && !this.endtimestampx) {
+          this.$notification.open('You have to select a end timestep!')
+        } else if (!this.starttimestampx && this.endtimestampx) {
+          this.$notification.open('You have to select a start timestep!')
+        } else if (!this.starttimestampx && !this.endtimestampx) {
+          if (!this.jobidsx) {
+            this.$notification.open('You have to select something!')
+          } else if (this.jobidsx) {
+            let i
+            for (i = 0; i < this.$refs.layerSource.length; i++) {
+              let features = this.$refs.layerSource[i].getFeatures()
+              if (features[0].values_.chem_id) {
+                let url = this.Test_MeasurementsURL(this.starttimestampx, this.endtimestampx, this.jobidsx)
+                this.layers[i].source.url = url
+                this.$refs.layerSource[i].removeFeatures(features)
+                // the that is used to deal with this scope
+                var thats = this
+                // eye is used for i to deal with the async effects of axios
+                let eye = i
+                axios.get(url)
+                  .then(function (response) {
+                    thats.$refs.layerSource[eye].addFeatures(response.data.features)
+                  })
+                  .catch(function (error) {
+                    console.log(error)
+                  })
+              }
+            }
+          }
+        }
+      },
+      // filter data only on the client side. Dependent on data available from the DRF server
       filterMeasurements () {
         // check to see if there are stored features, and if there are then add them
         // to the layerSource features,so all features are available for filtering.
@@ -731,6 +819,11 @@
               }
             }
           }
+        // other wise tell user they have to refine their search
+        } else if (this.starttimestamp && !this.endtimestamp) {
+          this.$notification.open('You have to select a end timestep')
+        } else if (!this.starttimestamp && this.endtimestamp) {
+          this.$notification.open('You have to select a start timestep')
         }
       },
     },
