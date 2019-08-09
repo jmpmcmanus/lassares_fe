@@ -331,7 +331,6 @@
   import { platformModifierKeyOnly } from 'ol/events/condition.js'
   import d3Barchart from '@/mixins/vue-d3-barchart'
   import { Treeselect, LOAD_ROOT_OPTIONS } from '@riophae/vue-treeselect'
-  // import { Treeselect, ASYNC_SEARCH } from '@riophae/vue-treeselect'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import axios from 'axios'
 
@@ -369,30 +368,33 @@
       d3Barchart,
       Treeselect,
     },
+    created: function () {
+      let that = this
+      let turl = 'http://localhost:8000/api/timestamp_Model/?format=json'
+      axios.get(turl)
+        .then(function (response) {
+          that.searchtoptions = response.data
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+
+      let jurl = 'http://localhost:8000/api/jobid_Model/?format=json'
+      axios.get(jurl)
+        .then(function (response) {
+          that.searchjoptions = response.data
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
     data () {
       return {
         center: [-73.851271, 40.725070],
         zoom: 15,
         rotation: 0,
-        searchtoptions: [
-          { id: '2019-05-12T19:20:10Z', label: '2019-05-12T19:20:10Z' },
-          { id: '2019-05-12T19:20:15Z', label: '2019-05-12T19:20:15Z' },
-          { id: '2019-05-12T19:20:20Z', label: '2019-05-12T19:20:20Z' },
-          { id: '2019-05-12T19:20:25Z', label: '2019-05-12T19:20:25Z' },
-          { id: '2019-05-12T19:20:30Z', label: '2019-05-12T19:20:30Z' },
-          { id: '2019-05-20T17:11:10Z', label: '2019-05-20T17:11:10Z' },
-          { id: '2019-05-20T17:14:15Z', label: '2019-05-20T17:14:15Z' },
-          { id: '2019-05-20T17:17:28Z', label: '2019-05-20T17:17:28Z' },
-          { id: '2019-05-20T17:21:25Z', label: '2019-05-20T17:21:25Z' },
-          { id: '2019-05-20T17:28:01Z', label: '2019-05-20T17:28:01Z' },
-          { id: '2019-05-20T17:35:30Z', label: '2019-05-20T17:35:30Z' },
-          { id: '2019-05-20T17:40:22Z', label: '2019-05-20T17:40:22Z' },
-          { id: '2019-05-20T17:43:30Z', label: '2019-05-20T17:43:30Z' },
-        ],
-        searchjoptions: [
-          { id: '1', label: '1' },
-          { id: '2', label: '2' },
-        ],
+        searchtoptions: [],
+        searchjoptions: [],
         starttimestamp: undefined,
         endtimestamp: undefined,
         starttimestampx: undefined,
@@ -507,7 +509,7 @@
           canvas.width = 8 * pixelRatio
           canvas.height = 8 * pixelRatio
           // white background
-          context.fillStyle = 'rgb(191, 195, 199)'
+          context.fillStyle = 'rgb(22, 183, 242)'
           context.fillRect(0, 0, canvas.width, canvas.height)
           // outer circle
           context.fillStyle = 'rgb(46, 9, 46, 0.5)'
