@@ -6,7 +6,6 @@ const path = require('path')
 
 module.exports = {
   dev: {
-
     // Paths
     assetsSubDirectory: '',
     assetsPublicPath: (process.env.BASE_PATH || '') + '/',

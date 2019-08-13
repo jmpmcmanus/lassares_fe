@@ -393,6 +393,7 @@
         center: [-73.851271, 40.725070],
         zoom: 15,
         rotation: 0,
+        mbtoken: [],
         searchtoptions: [],
         searchjoptions: [],
         starttimestamp: undefined,
@@ -456,7 +457,7 @@
             title: 'Mapbox Satellite',
             // mapId: 'mapbox.mapbox-streets-v7',
             mapId: 'mapbox.satellite',
-            accessToken: 'sk.eyJ1IjoiY29kZWZvcmFtZXJpY2EiLCJhIjoiY2ptd3F1d2Q4MDJ4djNxcjJ6NDltNzhnayJ9.4wsfBXJpT4y9L4tahnag9g',
+            accessToken: 'xxxxxxxxxxxxxxxxx',
             visible: false,
           },
         ],
@@ -699,6 +700,7 @@
         }
       },
       searchMeasurements () {
+        console.log(this.mbtoken)
         if (this.starttimestampx && this.endtimestampx) {
           if (this.endtimestampx < this.starttimestampx) {
             this.$notification.open('You have to pick end timestep later than the start timestamp!')
